@@ -6,26 +6,35 @@ import { Language } from '../translations';
 
 export default function LanguageSelector() {
     const { language, setLanguage } = useLanguage();
-    const languages: Language[] = ['EN', 'TW', 'JP', 'KR'];
+
+    const languageMap: Record<Language, string> = {
+        'en': 'English',
+        'zh-CN': '简体中文',
+        'zh-TW': '繁體中文',
+        'ko': '한국어',
+        'pl': 'Polski',
+        'ja': '日本語',
+        'es': 'Español',
+        'de': 'Deutsch',
+        'it': 'Italiano',
+        'id': 'Bahasa Indonesia',
+        'ru': 'Русский',
+        'vn': 'Tiếng Việt'
+    };
 
     return (
-        <div className="absolute top-6 right-6 z-50 flex gap-4 text-xs tracking-widest font-light">
-            {languages.map((lang) => (
-                <button
-                    key={lang}
-                    onClick={() => setLanguage(lang)}
-                    className={`relative px-2 py-1 transition-colors duration-500 uppercase ${language === lang ? 'text-white' : 'text-zinc-600 hover:text-zinc-400'
-                        }`}
-                >
-                    {lang}
-                    {language === lang && (
-                        <motion.div
-                            layoutId="lang-underline"
-                            className="absolute bottom-0 left-0 right-0 h-[1px] bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.8)]"
-                        />
-                    )}
-                </button>
-            ))}
+        <div className="fixed top-4 right-4 z-50">
+            <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                className="bg-black/80 backdrop-blur-md text-zinc-300 text-xs tracking-widest uppercase border border-white/20 rounded px-3 py-2 outline-none hover:border-white/50 transition-colors cursor-pointer"
+            >
+                {Object.entries(languageMap).map(([code, name]) => (
+                    <option key={code} value={code} className="bg-zinc-900 text-zinc-300">
+                        {name}
+                    </option>
+                ))}
+            </select>
         </div>
     );
 }

@@ -18,19 +18,32 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
             <div className="absolute inset-2 border border-white/10 rounded-lg pointer-events-none" />
 
             {/* Header */}
-            <div className="mt-4 space-y-1 z-10 w-full px-6 text-center relative">
+            <div className="mt-4 space-y-2 z-10 w-full px-6 text-center relative">
                 <h3 className="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Soulbound Artifact</h3>
-                <h2 className="text-xl font-serif text-white tracking-wide">{data.archetype_name || (data as any).archetype}</h2>
 
-                {/* Badges (MBTI / Enneagram) */}
-                <div className="flex justify-center gap-2 mt-1">
+                {/* Archetype & Narrative Phase */}
+                <div>
+                    <h2 className="text-xl font-serif text-white tracking-wide">{data.archetype_name || (data as any).archetype}</h2>
+                    {data.narrative_phase && (
+                        <p className="text-[10px] text-zinc-400 font-light italic mt-1">
+                            Phase: {data.narrative_phase}
+                        </p>
+                    )}
+                </div>
+
+                {/* Badges (MBTI / Enneagram) - Absolute or Centered? User asked for Top Right, but Centered is cleaner for card. 
+                    I'll keep them centered for symmetry as "Top Right" might crowd the header. 
+                    Or I'll position them absolute in the card container.
+                    Let's put them in the header row for now.
+                */}
+                <div className="flex justify-center gap-2 mt-2">
                     {data.mbti_type && (
-                        <span className="text-[9px] font-mono border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded text-cyan-400">
+                        <span className="text-[9px] font-mono border border-zinc-700 bg-zinc-900/50 px-2 py-1 rounded-full text-cyan-400 shadow-sm">
                             {data.mbti_type}
                         </span>
                     )}
                     {data.enneagram_type && (
-                        <span className="text-[9px] font-mono border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded text-purple-400">
+                        <span className="text-[9px] font-mono border border-zinc-700 bg-zinc-900/50 px-2 py-1 rounded-full text-purple-400 shadow-sm">
                             {data.enneagram_type}
                         </span>
                     )}
@@ -53,13 +66,13 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
                 </div>
             </div>
 
-            {/* Footer / QR */}
+            {/* Footer / Core Tension */}
             <div className="w-full bg-white/5 p-4 rounded-lg backdrop-blur-sm border border-white/5 flex items-center justify-between gap-4">
-                <div className="text-left">
-                    <p className="text-[10px] text-zinc-400 uppercase tracking-wider">Rarity</p>
-                    <p className="text-sm font-bold text-yellow-500 tracking-widest">{rarity}</p>
+                <div className="text-left flex-1">
+                    <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Core Tension</p>
+                    <p className="text-sm font-bold text-white tracking-wide">{data.core_tension || "Unresolved"}</p>
                 </div>
-                <div className="p-1 bg-white rounded-sm">
+                <div className="p-1 bg-white rounded-sm shrink-0">
                     <QRCodeSVG value={shareUrl} size={48} />
                 </div>
             </div>

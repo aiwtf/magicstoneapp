@@ -4,25 +4,29 @@ import { SoulDimensions } from './soulEngine';
 
 export interface SoulFragment {
     id: string;
-    source: 'ChatGPT' | 'Gemini' | 'Claude' | 'Unknown';
+    source: string;
     timestamp: number;
 
-    // Unified Schema Fields
+    // Identity Tags
     archetype_name: string;
-    archetype_description?: string;
-    mbti_type?: string;
-    enneagram_type?: string;
-    core_tension?: string;
-    narrative_phase?: string;
-    cognitive_biases?: string[];
-    keywords: string[]; // Maintained for app functionality
+    archetype_description: string;
+    mbti_type?: string;        // e.g., INTJ
+    enneagram_type?: string;   // e.g., Type 4
+    keywords: string[];        // Kept for UI compatibility
 
+    // Deep Narratives
+    core_tension?: string;     // e.g., Freedom vs Belonging
+    narrative_phase?: string;  // e.g., The Awakening
+    cognitive_biases?: string[];
+
+    // The 8-Dimensional Soul Vector
     dimensions: SoulDimensions;
+
+    confidence_score: number;
 
     // Visual/Meta
     visual_seed: string;
     soul_color: string;
-    summary?: string; // Legacy/Fallback
 }
 
 export interface SoulComposite {
@@ -31,7 +35,7 @@ export interface SoulComposite {
 
     // Aggregated Stats
     dimensions: SoulDimensions;
-    keywords: string[]; // Maintained for app functionality
+    keywords: string[];
 
     // Latest Meta
     archetype_name: string;
@@ -47,14 +51,9 @@ export interface SoulComposite {
 }
 
 // 3. Density Curve Logic
-// 1 Fragment = 0.59 (Blurry/Ghostly)
-// 2 Fragments = 0.84 (Solidifying)
-// 3+ Fragments = approaches 1.0 (Crystalline)
 function calculateDensity(count: number): number {
     if (count === 0) return 0;
     if (count === 1) return 0.59;
-
-    // Simple growth formula: Base + (Count-1 * Boost)
     const base = 0.59;
     const boost = 0.25;
     const val = base + ((count - 1) * boost);
@@ -67,7 +66,6 @@ export function aggregateSoul(
     newFragment: SoulFragment
 ): SoulComposite {
 
-    // Start with existing fragments or empty array
     const allFragments = currentComposite
         ? [...currentComposite.fragments, newFragment]
         : [newFragment];
@@ -75,8 +73,6 @@ export function aggregateSoul(
     const count = allFragments.length;
 
     // A. Average the Dimensions
-    // We re-calculate from scratch to avoid floating point drift
-    // 2. Average Dimensions
     const totalDims = allFragments.reduce((acc, frag) => ({
         structure: acc.structure + frag.dimensions.structure,
         luminosity: acc.luminosity + frag.dimensions.luminosity,
@@ -102,22 +98,19 @@ export function aggregateSoul(
         narrative_depth: Math.round(totalDims.narrative_depth / count),
     };
 
-    // B. Merge Keywords (Set Union to remove duplicates)
+    // B. Merge Keywords
     const keywordSet = new Set<string>();
     allFragments.forEach(f => f.keywords.forEach(k => keywordSet.add(k)));
 
-    // C. Update Archetype & Seed
-    // For MVP, the LATEST ritual influences the visual texture the most
+    // C. Update Archetype & Meta (Latest wins)
     const latest = newFragment;
 
     return {
         fragments: allFragments,
         density: calculateDensity(count),
         dimensions: avgDimensions,
-        // Union of keywords
         keywords: Array.from(keywordSet).slice(0, 15),
 
-        // Meta from latest
         archetype_name: latest.archetype_name,
         archetype_description: latest.archetype_description,
         mbti_type: latest.mbti_type,

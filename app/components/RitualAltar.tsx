@@ -121,7 +121,8 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
 
                     visual_seed: rawData.visual_seed || 'void',
                     soul_color: rawData.soul_color || '#a855f7', // Default purple for now
-                    keywords: rawData.keywords || []
+                    keywords: rawData.keywords || [],
+                    confidence_score: rawData.confidence_score || 80
                 };
 
                 setTimeout(() => onInitialize(fragment), 800);
