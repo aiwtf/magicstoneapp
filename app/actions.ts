@@ -10,8 +10,8 @@ interface SoulAnalysisResult {
 }
 
 export async function analyzeSoul(logs: string[]): Promise<SoulAnalysisResult> {
+    const apiKey = process.env.GEMINI_API_KEY;
     try {
-        const apiKey = process.env.GEMINI_API_KEY;
         console.log("Analyze Soul called. API Key present:", !!apiKey);
 
         if (!apiKey) {
