@@ -8,32 +8,31 @@ import { Download, Info, Heart, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+import { analyzeSoul } from "./actions";
 
 export default function Home() {
   const { progress, logs, isAbsorbing, absorbSoul } = useSoulEngine();
-  const [reading, setReading] = useState(null);
+  const [reading, setReading] = useState<any>(null);
   const [isAwakening, setIsAwakening] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
   const handleAwaken = async () => {
     if (processing) return;
-    setIsAwakening(true); #ekko
+    setIsAwakening(true);
 
     try {
-      const res = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ logs })
-      });
+      console.log("Awakening started...");
+      const data = await analyzeSoul(logs);
 
-      if (!res.ok) throw new Error('Failed to awaken');
+      if (data.error) {
+        throw new Error(data.error);
+      }
 
-      const data = await res.json();
       setReading(data);
       setShowModal(true);
     } catch (e) {
       console.error(e);
-      alert("The connection is weak. Ensure GEMINI_API_KEY is set.");
+      alert(e instanceof Error ? e.message : "The connection is weak.");
     } finally {
       setIsAwakening(false);
     }

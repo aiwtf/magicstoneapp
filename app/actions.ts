@@ -1,17 +1,25 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { NextResponse } from "next/server";
+'use server';
 
-export async function POST(req: Request) {
+import { GoogleGenerativeAI } from "@google/generative-ai";
+
+interface SoulAnalysisResult {
+    soul_color: string;
+    keywords: string[];
+    summary: string;
+    error?: string;
+}
+
+export async function analyzeSoul(logs: string[]): Promise<SoulAnalysisResult> {
     try {
         const apiKey = process.env.GEMINI_API_KEY;
+        console.log("Analyze Soul called. API Key present:", !!apiKey);
+
         if (!apiKey) {
-            return NextResponse.json({ error: "Waiting for Soul Connection... (Missing API Key)" }, { status: 500 });
+            throw new Error("Waiting for Soul Connection... (Missing API Key)");
         }
 
-        const { logs } = await req.json();
-
         if (!logs || !Array.isArray(logs) || logs.length === 0) {
-            return NextResponse.json({ error: "The stone is silent." }, { status: 400 });
+            throw new Error("The stone is silent.");
         }
 
         // Combine logs into a single context
@@ -40,17 +48,21 @@ export async function POST(req: Request) {
         const result = await model.generateContent(prompt);
         const responseText = result.response.text();
 
+        console.log("Gemini Response:", responseText); // Debugging
+
         // Basic clean up to ensure valid JSON (remove markdown blocks if present)
         const cleanedText = responseText.replace(/```json/g, '').replace(/```/g, '').trim();
         const data = JSON.parse(cleanedText);
 
-        return NextResponse.json(data);
+        return data;
 
     } catch (error) {
         console.error("Soul Reading Error:", error);
-        return NextResponse.json(
-            { error: "The spirits are clouded. Please try again later." },
-            { status: 500 }
-        );
+        return {
+            soul_color: "#000000",
+            keywords: ["Clouded", "Silent", "Mystery"],
+            summary: "The spirits are having trouble connecting. It might be a momentary lapse in the ether.",
+            error: error instanceof Error ? error.message : "The spirits are clouded. Please try again later."
+        };
     }
 }
