@@ -25,6 +25,7 @@ export interface SoulJSON {
     narrative_phase: string;
     dimensions: SoulDimensions;
     cognitive_biases: string[];
+    confidence_score?: number;
 }
 
 /**
@@ -82,78 +83,39 @@ User History to Analyze:
  * @param text The text to search in.
  * @param expectedNonce The nonce to verify against.
  */
-export function extractSoulJSON(text: string, expectedNonce: string): SoulJSON {
-    // 1. Try to find the nonce location
-    const nonceIndex = text.indexOf(expectedNonce);
-    if (nonceIndex === -1) {
-        throw new Error("No Soul Resonance found. (Verification Code missing)");
-    }
-
-    // Try 1: Clean markdown code blocks
-    const codeBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
-    if (codeBlockMatch) {
-        try {
-            const data = JSON.parse(codeBlockMatch[1]);
-            if (data.verification_code === expectedNonce) return validateSoulJSON(JSON.stringify(data), expectedNonce);
-        } catch (e) { }
-    }
-
-    // Try 2: Clean and parse whole text
-    const cleanText = text.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
-    try {
-        const data = JSON.parse(cleanText);
-        if (data.verification_code === expectedNonce) return validateSoulJSON(JSON.stringify(data), expectedNonce);
-    } catch (e) { }
-
-    // Try 3: Heuristic extraction around the nonce
-    const openBrace = cleanText.lastIndexOf('{', nonceIndex);
-    if (openBrace !== -1) {
-        let balance = 1;
-        for (let i = openBrace + 1; i < cleanText.length; i++) {
-            if (cleanText[i] === '{') balance++;
-            if (cleanText[i] === '}') balance--;
-
-            if (balance === 0) {
-                const candidate = cleanText.substring(openBrace, i + 1);
-                try {
-                    return validateSoulJSON(candidate, expectedNonce);
-                } catch (e) { }
-                break;
-            }
-        }
-    }
-
-    // Fallback: validate what we can
-    throw new Error("Fragments found, but the Soul is incomplete.");
-}
-
 /**
- * Validates and parses the Soul JSON string.
+ * Extracts SoulJSON from a larger text block (e.g. mixed response from AI).
+ * Uses robust substring extraction to find the JSON block.
  */
-export function validateSoulJSON(jsonString: string, expectedNonce: string): SoulJSON {
-    // Basic cleaning to handle potential Markdown code blocks if user copies too much
-    const cleanString = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
+export function extractSoulJSON(text: string): SoulJSON {
+    // 1. Find the first '{' and the last '}'
+    const firstBrace = text.indexOf('{');
+    const lastBrace = text.lastIndexOf('}');
 
-    let data;
+    if (firstBrace === -1 || lastBrace === -1) {
+        throw new Error("No soul signature found (Missing JSON brackets).");
+    }
+
+    // 2. Extract the potential JSON block
+    const jsonCandidate = text.substring(firstBrace, lastBrace + 1);
+
+    // 3. Parse
     try {
-        data = JSON.parse(cleanString);
+        // Handle potential markdown wrappers if they are inside the braces (unlikely but possible if strict)
+        // cleanCandidate = jsonCandidate.replace(/```json/g, '').replace(/```/g, ''); 
+        // But usually { ... } captures the content.
+
+        const data = JSON.parse(jsonCandidate);
+
+        // Validate essential fields
+        if (!data.dimensions || !data.archetype_name) {
+            throw new Error("Incomplete Soul Structure.");
+        }
+        return data as SoulJSON;
     } catch (e) {
-        throw new Error("The scroll is illegible. (Invalid JSON format)");
+        console.error(e);
+        throw new Error("Soul corruption detected. Please copy the AI response again.");
     }
-
-    if (data.verification_code !== expectedNonce) {
-        // Security check
-        throw new Error(`Soul Signature Mismatch. Expected code: ${expectedNonce}`);
-    }
-
-    // ... existing validation logic ...
-
-    // Schema Validation (Basic)
-    if (!data.archetype || !data.soul_color || !data.dimensions) {
-        throw new Error(" The Soul is fragmented. (Missing required fields)");
-    }
-
-    return data as SoulJSON;
 }
 
 // --- SOUL RADAR LSH LOGIC ---

@@ -46,7 +46,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
         setError('');
         try {
             const text = await navigator.clipboard.readText();
-            const data = extractSoulJSON(text, nonce);
+            const data = extractSoulJSON(text);
 
             // "Data Burn" Effect
             // Artificial delay to simulate processing/burning

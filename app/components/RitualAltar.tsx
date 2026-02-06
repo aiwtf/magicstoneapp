@@ -17,7 +17,7 @@ type OracleType = 'ChatGPT' | 'Gemini' | 'Claude';
 
 export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps) {
     const { t, language } = useLanguage();
-    const [step, setStep] = useState<'select' | 'await'>('select');
+    const [step, setStep] = useState<'select' | 'guide' | 'await'>('select');
     const [isThinking, setIsThinking] = useState(false);
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
@@ -47,19 +47,21 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
         try {
             await navigator.clipboard.writeText(prompt);
             setCopied(true);
-            // Show toast visually (implemented via UI state below)
         } catch (err) {
             console.error("Clipboard failed", err);
-            // Fallback? For MVP just proceed and hope user copies manually if needed (UI not built for manual copy yet as per specs)
         }
 
-        // Step B: Deep Linking / Redirect
+        // Show Guide Modal instead of immediate redirect
+        setStep('guide');
+    };
+
+    const handleOpenApp = () => {
         setStep('await');
 
         let url = '';
         let deepLink = '';
 
-        switch (oracle) {
+        switch (selectedOracle) {
             case 'ChatGPT':
                 deepLink = 'chatgpt://search'; // Try deep link
                 url = 'https://chatgpt.com/';
@@ -89,57 +91,48 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
         setError('');
         try {
             const textData = await navigator.clipboard.readText();
-            // We'll try to parse loosely finding the first JSON block
-            const jsonMatch = textData.match(/\{[\s\S]*"density_boost"[\s\S]*\}/);
+            // Robust parsing via soulEngine
+            const rawData = extractSoulJSON(textData);
 
-            if (jsonMatch) {
-                const rawData = JSON.parse(jsonMatch[0]);
+            // Transform raw JSON into our new Fragment structure
+            const fragment: SoulFragment = {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                source: selectedOracle,
+                timestamp: Date.now(),
 
-                // Validation check
-                if (!rawData.dimensions || !rawData.archetype) {
-                    throw new Error("Invalid Soul Structure");
-                }
+                archetype_name: rawData.archetype_name || "Unknown Soul",
+                archetype_description: rawData.archetype_description || "",
+                mbti_type: rawData.mbti_type,
+                enneagram_type: rawData.enneagram_type,
+                core_tension: rawData.core_tension || "Unresolved",
+                narrative_phase: rawData.narrative_phase || "Wandering",
+                cognitive_biases: rawData.cognitive_biases || [],
 
-                // Transform raw JSON into our new Fragment structure
-                const fragment: SoulFragment = {
-                    id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
-                    source: selectedOracle,
-                    timestamp: Date.now(),
+                dimensions: rawData.dimensions || {
+                    structure: 50, luminosity: 50, resonance: 50, ethereal: 50,
+                    volatility: 50, entropy: 50, cognitive_rigidness: 50, narrative_depth: 50
+                },
 
-                    archetype_name: rawData.archetype_name || "Unknown Soul",
-                    archetype_description: rawData.archetype_description || "",
-                    mbti_type: rawData.mbti_type,
-                    enneagram_type: rawData.enneagram_type,
-                    core_tension: rawData.core_tension || "Unresolved",
-                    narrative_phase: rawData.narrative_phase || "Wandering",
-                    cognitive_biases: rawData.cognitive_biases || [],
+                visual_seed: rawData.visual_seed || 'void',
+                soul_color: rawData.soul_color || '#a855f7', // Default purple for now
+                keywords: rawData.keywords || [],
+                confidence_score: rawData.confidence_score || 80
+            };
 
-                    dimensions: rawData.dimensions || {
-                        structure: 50, luminosity: 50, resonance: 50, ethereal: 50,
-                        volatility: 50, entropy: 50, cognitive_rigidness: 50, narrative_depth: 50
-                    },
-
-                    visual_seed: rawData.visual_seed || 'void',
-                    soul_color: rawData.soul_color || '#a855f7', // Default purple for now
-                    keywords: rawData.keywords || [],
-                    confidence_score: rawData.confidence_score || 80
-                };
-
-                if (fragment.confidence_score < 40) {
-                    setError("Soul Signal Weak. Analysis superficial. Stone will be unstable.");
-                    // Proceed anyway after a longer delay to let user see the warning
-                    setTimeout(() => onInitialize(fragment), 2500);
-                } else {
-                    setTimeout(() => onInitialize(fragment), 800);
-                }
-
-                return;
+            if (fragment.confidence_score < 40) {
+                setError("Soul Signal Weak. Analysis superficial. Stone will be unstable.");
+                // Proceed anyway after a longer delay to let user see the warning
+                setTimeout(() => onInitialize(fragment), 2500);
+            } else {
+                setTimeout(() => onInitialize(fragment), 800);
             }
-            throw new Error("No ritual data found.");
+
+            return;
 
         } catch (e) {
             setIsThinking(false);
-            setError(e instanceof Error ? "The artifact is blurry. (Copy the JSON)" : "Unknown interference.");
+            console.error(e);
+            setError("Could not find the Soul Signature. Did you copy the FULL AI response?");
         }
     };
 
@@ -168,7 +161,7 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                 </div>
 
                 <AnimatePresence mode="wait">
-                    {step === 'select' ? (
+                    {step === 'select' && (
                         <motion.div
                             key="select"
                             initial={{ opacity: 0 }}
@@ -193,7 +186,41 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                                 </button>
                             ))}
                         </motion.div>
-                    ) : (
+                    )}
+
+                    {step === 'guide' && (
+                        <motion.div
+                            key="guide"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
+                            className="p-8 pt-0 space-y-6 text-left"
+                        >
+                            <div className="space-y-4 text-zinc-300 text-sm">
+                                <div className="flex items-start gap-3">
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">1</div>
+                                    <p>The <span className="text-purple-400 font-bold">Incantation</span> has been copied to your clipboard.</p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">2</div>
+                                    <p>Go to the App, <span className="text-white font-bold">Paste</span>, and Send.</p>
+                                </div>
+                                <div className="flex items-start gap-3">
+                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">3</div>
+                                    <p>Copy the <span className="text-white font-bold">ENTIRE Response</span> (Text + JSON) and return here.</p>
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={handleOpenApp}
+                                className="w-full py-4 text-xs font-bold uppercase tracking-[0.2em] bg-white text-black hover:bg-zinc-200 rounded-lg transition-all"
+                            >
+                                Open {selectedOracle === 'Unknown' ? 'App' : selectedOracle}
+                            </button>
+                        </motion.div>
+                    )}
+
+                    {step === 'await' && (
                         <motion.div
                             key="await"
                             initial={{ opacity: 0, x: 20 }}
@@ -224,16 +251,10 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             </button>
 
                             {error && (
-                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2 text-red-400 text-[10px] uppercase tracking-wider">
-                                    <AlertCircle className="w-3 h-3" />
-                                    {error}
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2 text-red-400 text-[10px] uppercase tracking-wider text-center">
+                                    <AlertCircle className="w-4 h-4 shrink-0" />
+                                    <span>{error}</span>
                                 </motion.div>
-                            )}
-
-                            {copied && !error && (
-                                <p className="text-center text-[10px] text-green-500/50 uppercase tracking-widest">
-                                    {t('toast.copied')}
-                                </p>
                             )}
                         </motion.div>
                     )}
