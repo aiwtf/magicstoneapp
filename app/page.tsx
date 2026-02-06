@@ -2,19 +2,53 @@
 
 import MagicStone from "./components/MagicStone";
 import SoulInput from "./components/SoulInput";
+import SoulReadingModal from "./components/SoulReadingModal";
 import { useSoulEngine } from "./hooks/useSoulEngine";
-import { Download, Info, Heart } from "lucide-react";
+import { Download, Info, Heart, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 
 export default function Home() {
   const { progress, logs, isAbsorbing, absorbSoul } = useSoulEngine();
+  const [reading, setReading] = useState(null);
+  const [isAwakening, setIsAwakening] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
-  // Subtle visual feedback when progress increases
-  // Only show progress bar if user has started interacting (progress > 0)
+  const handleAwaken = async () => {
+    if (processing) return;
+    setIsAwakening(true);
+
+    try {
+      const res = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ logs })
+      });
+
+      if (!res.ok) throw new Error('Failed to awaken');
+
+      const data = await res.json();
+      setReading(data);
+      setShowModal(true);
+    } catch (e) {
+      console.error(e);
+      alert("The connection is weak. Ensure GEMINI_API_KEY is set.");
+    } finally {
+      setIsAwakening(false);
+    }
+  };
+
+  // Prevent multiple clicks
+  const processing = isAbsorbing || isAwakening;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center relative overflow-hidden bg-black selection:bg-purple-900 selection:text-white">
+
+      {/* Soul Reading Modal */}
+      <AnimatePresence>
+        {showModal && <SoulReadingModal isOpen={showModal} onClose={() => setShowModal(false)} data={reading} />}
+      </AnimatePresence>
 
       {/* Background Ambience - dynamic based on progress */}
       <div className="fixed inset-0 pointer-events-none transition-all duration-[3000ms]">
@@ -43,12 +77,27 @@ export default function Home() {
         </div>
 
         {/* Input Area */}
-        <SoulInput onSend={absorbSoul} isLoading={isAbsorbing} />
+        <SoulInput onSend={absorbSoul} isLoading={processing} />
 
-        {/* Secret Status (Only visible if something happened) */}
-        <p className="h-4 text-[10px] text-gray-700 font-mono tracking-tighter">
-          {progress > 0 ? `SYNC: ${progress.toFixed(0)}%` : ""}
-        </p>
+        {/* Actions Zone: Status or Awakening */}
+        <div className="min-h-[40px] flex items-center justify-center">
+          {progress > 10 ? (
+            <button
+              onClick={handleAwaken}
+              disabled={processing}
+              className="group flex items-center gap-2 px-6 py-2 rounded-full bg-white/10 hover:bg-magic-purple/20 border border-magic-purple/50 text-magic-purple hover:text-white transition-all duration-500 disabled:opacity-50"
+            >
+              <Sparkles className={`w-4 h-4 ${isAwakening ? "animate-spin" : ""}`} />
+              <span className="text-xs font-bold tracking-widest uppercase">
+                {isAwakening ? "Reading Soul..." : "Awaken Stone"}
+              </span>
+            </button>
+          ) : (
+            <p className="h-4 text-[10px] text-gray-700 font-mono tracking-tighter">
+              {progress > 0 ? `SYNC: ${progress.toFixed(0)}%` : ""}
+            </p>
+          )}
+        </div>
 
         {/* Download Buttons - Moved to bottom, smaller */}
         <div className="flex gap-4 opacity-50 hover:opacity-100 transition-opacity duration-500 mt-8 scale-90">
