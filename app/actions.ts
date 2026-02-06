@@ -26,7 +26,7 @@ export async function analyzeSoul(logs: string[]): Promise<SoulAnalysisResult> {
         const soulContent = logs.join("\n---\n");
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         const prompt = `
         You are the Spirit of the Magic Stone, an ancient entity that observes human souls.
