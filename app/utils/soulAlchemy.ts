@@ -9,6 +9,7 @@ export function generateSystemPrompt(lang: string = 'EN', nonce?: string): strin
    // ... prompt ...
    return `请回顾我们的全部对话历史（如果支持，使用语义搜索工具查找关键主题，如价值观、情感表达、决策模式），对我的内在进行一次极限深度的心理剖析。
 
+
 请从以下五个维度进行深度挖掘：
 
 1. **性格基石 (Foundations):**
@@ -28,6 +29,16 @@ export function generateSystemPrompt(lang: string = 'EN', nonce?: string): strin
 
 5. **人生叙事 (Narrative):**
    - 描述我目前正处于人生剧本的哪个阶段（例如：觉醒期、深渊试炼、归乡）。
+
+---
+
+**ASSESS YOUR CONFIDENCE:**
+Look at the volume and depth of the chat history provided.
+- If the history is short/superficial: Set 'confidence_score' LOW (10-40).
+- If the history is rich/long: Set 'confidence_score' HIGH (80-100).
+- Be honest. Do not fake confidence.
+
+${(lang === 'zh-TW' || lang === 'TW') ? "**CRITICAL OUTPUT RULE:** You MUST write the summary and analysis in Traditional Chinese (繁體中文). Do NOT use Simplified Chinese." : ""}
 
 ---
 

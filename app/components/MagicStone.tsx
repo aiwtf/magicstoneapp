@@ -22,6 +22,8 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
     // 2. Extract Data (Unified Schema)
     const density = soul?.density || 0;
     const dims = soul?.dimensions;
+    const confidence = soul?.confidence_score ?? 100;
+    const isWeak = confidence < 40;
 
     const rigidness = dims?.cognitive_rigidness ?? 50;
     const entropy = dims?.entropy ?? 0;
@@ -106,6 +108,8 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
                         thickness={2}
                         distort={distortAmount}
                         speed={distortSpeed}
+                        transparent={true}
+                        opacity={isWeak ? 0.4 : 1.0}
                     />
                 </Icosahedron>
             </Float>

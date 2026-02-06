@@ -48,6 +48,7 @@ export interface SoulComposite {
 
     visual_seed: string;
     soul_color: string;
+    confidence_score: number;
 }
 
 // 3. Density Curve Logic
@@ -120,6 +121,7 @@ export function aggregateSoul(
         cognitive_biases: latest.cognitive_biases || [],
 
         visual_seed: latest.visual_seed,
-        soul_color: latest.soul_color
+        soul_color: latest.soul_color,
+        confidence_score: Math.round(allFragments.reduce((acc, f) => acc + (f.confidence_score || 0), 0) / count)
     };
 }

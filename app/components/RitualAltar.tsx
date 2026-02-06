@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, ExternalLink, Zap, AlertCircle } from 'lucide-react';
+import { X, Copy, ExternalLink, Zap, AlertCircle, Sparkles, Bot, Brain } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { generateSystemPrompt } from '../utils/soulAlchemy';
 import { extractSoulJSON } from '../utils/soulEngine'; // Keep for future JSON verify if needed, or remove if unused locally
@@ -125,7 +125,14 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                     confidence_score: rawData.confidence_score || 80
                 };
 
-                setTimeout(() => onInitialize(fragment), 800);
+                if (fragment.confidence_score < 40) {
+                    setError("Soul Signal Weak. Analysis superficial. Stone will be unstable.");
+                    // Proceed anyway after a longer delay to let user see the warning
+                    setTimeout(() => onInitialize(fragment), 2500);
+                } else {
+                    setTimeout(() => onInitialize(fragment), 800);
+                }
+
                 return;
             }
             throw new Error("No ritual data found.");
@@ -170,17 +177,19 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             className="p-8 pt-0 grid grid-cols-1 md:grid-cols-3 gap-4"
                         >
                             {[
-                                { id: 'ChatGPT', name: 'Oracle GPT', icon: '✦', color: 'hover:border-green-500/30 hover:bg-green-500/5' },
-                                { id: 'Gemini', name: 'Cosmic Gemini', icon: '✧', color: 'hover:border-blue-500/30 hover:bg-blue-500/5' },
-                                { id: 'Claude', name: 'Sage Claude', icon: '✤', color: 'hover:border-orange-500/30 hover:bg-orange-500/5' },
+                                { id: 'ChatGPT', name: 'ChatGPT', icon: <Bot className="w-8 h-8" />, color: 'hover:border-emerald-500/50 hover:bg-emerald-500/10' },
+                                { id: 'Gemini', name: 'Gemini', icon: <Sparkles className="w-8 h-8" />, color: 'hover:border-blue-500/50 hover:bg-blue-500/10' },
+                                { id: 'Claude', name: 'Claude', icon: <Brain className="w-8 h-8" />, color: 'hover:border-orange-500/50 hover:bg-orange-500/10' },
                             ].map((oracle) => (
                                 <button
                                     key={oracle.id}
                                     onClick={() => handleSummon(oracle.id as OracleType)}
                                     className={`group flex flex-col items-center justify-center p-6 border border-white/5 rounded-xl transition-all duration-500 ${oracle.color}`}
                                 >
-                                    <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-500 text-zinc-400 group-hover:text-white">{oracle.icon}</span>
-                                    <span className="text-xs font-bold tracking-widest text-zinc-500 group-hover:text-white uppercase">{oracle.name}</span>
+                                    <span className="mb-4 group-hover:scale-110 transition-transform duration-500 text-zinc-500 group-hover:text-white">
+                                        {oracle.icon}
+                                    </span>
+                                    <span className="text-xs font-bold tracking-widest text-zinc-600 group-hover:text-white uppercase">{oracle.name}</span>
                                 </button>
                             ))}
                         </motion.div>
