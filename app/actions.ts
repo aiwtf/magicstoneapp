@@ -26,7 +26,7 @@ export async function analyzeSoul(logs: string[]): Promise<SoulAnalysisResult> {
         const soulContent = logs.join("\n---\n");
 
         const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
         const prompt = `
         You are the Spirit of the Magic Stone, an ancient entity that observes human souls.
@@ -58,27 +58,11 @@ export async function analyzeSoul(logs: string[]): Promise<SoulAnalysisResult> {
 
     } catch (error) {
         console.error("Soul Reading Error:", error);
-
-        // Diagnostic: List available models from the server side
-        let debugInfo = `(Key used: ${apiKey ? apiKey.substring(0, 5) + '...' : 'undefined'})`;
-        try {
-            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
-            const listData = await listRes.json();
-            if (listData.models) {
-                const modelNames = listData.models.map((m: any) => m.name.replace('models/', '')).join(', ');
-                debugInfo += ` [Server Visible Models: ${modelNames}]`;
-            } else {
-                debugInfo += ` [ListModels Failed: ${JSON.stringify(listData)}]`;
-            }
-        } catch (e) {
-            debugInfo += ` [Diagnostic Failed: ${e}]`;
-        }
-
         return {
             soul_color: "#000000",
             keywords: ["Clouded", "Silent", "Mystery"],
             summary: "The spirits are having trouble connecting. It might be a momentary lapse in the ether.",
-            error: (error instanceof Error ? error.message : "The spirits are clouded.") + " " + debugInfo
+            error: error instanceof Error ? error.message : "The spirits are clouded. Please try again later."
         };
     }
 }
