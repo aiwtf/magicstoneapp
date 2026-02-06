@@ -17,7 +17,7 @@ export default function Home() {
 
   const handleAwaken = async () => {
     if (processing) return;
-    setIsAwakening(true);
+    setIsAwakening(true); #ekko
 
     try {
       const res = await fetch('/api/analyze', {
