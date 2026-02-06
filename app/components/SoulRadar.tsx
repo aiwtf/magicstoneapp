@@ -45,7 +45,8 @@ export default function SoulRadar({ userSoul, onClose }: SoulRadarProps) {
                     chaos: Math.random() * 100,
                     logic: Math.random() * 100,
                     empathy: Math.random() * 100,
-                    mysticism: Math.random() * 100
+                    mysticism: Math.random() * 100,
+                    cognitive_rigidness: Math.random() * 100 // Added cognitive_rigidness
                 };
                 const ghostHash = generateSoulHash(randomDims);
                 const resonance = calculateResonance(userHash, ghostHash);

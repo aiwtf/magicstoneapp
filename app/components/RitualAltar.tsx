@@ -107,10 +107,15 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                     timestamp: Date.now(),
                     archetype: rawData.archetype,
                     keywords: rawData.keywords || [],
-                    dimensions: rawData.dimensions,
+                    dimensions: {
+                        ...rawData.dimensions,
+                        cognitive_rigidness: rawData.dimensions?.cognitive_rigidness ?? 50
+                    },
                     visual_seed: rawData.visual_seed || 'void',
                     soul_color: rawData.soul_color || '#a855f7',
-                    summary: rawData.summary || 'A mysterious silence...'
+                    summary: rawData.summary || 'A mysterious silence...',
+                    core_tension: rawData.core_tension || 'Unknown Conflict',
+                    narrative_arc: rawData.narrative_arc || 'The Beginning'
                 };
 
                 setTimeout(() => onInitialize(fragment), 800);

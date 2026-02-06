@@ -12,10 +12,13 @@ export interface SoulFragment {
         logic: number;
         empathy: number;
         mysticism: number;
+        cognitive_rigidness: number; // New metric
     };
     visual_seed: string;
     soul_color: string;
     summary: string;
+    core_tension: string; // New
+    narrative_arc: string; // New
 }
 
 // 2. Define the output: The combined "Philosopher's Stone" state
@@ -29,6 +32,7 @@ export interface SoulComposite {
         logic: number;
         empathy: number;
         mysticism: number;
+        cognitive_rigidness: number;
     };
 
     keywords: string[];        // Union of all keywords
@@ -36,6 +40,8 @@ export interface SoulComposite {
     visual_seed: string;       // The active seed for rendering
     soul_color: string;        // Latest color
     summary: string;           // Latest summary
+    core_tension: string;      // Latest tension
+    narrative_arc: string;     // Latest arc
 }
 
 // 3. Density Curve Logic
@@ -73,13 +79,15 @@ export function aggregateSoul(
         logic: acc.logic + frag.dimensions.logic,
         empathy: acc.empathy + frag.dimensions.empathy,
         mysticism: acc.mysticism + frag.dimensions.mysticism,
-    }), { chaos: 0, logic: 0, empathy: 0, mysticism: 0 });
+        cognitive_rigidness: acc.cognitive_rigidness + (frag.dimensions.cognitive_rigidness || 0),
+    }), { chaos: 0, logic: 0, empathy: 0, mysticism: 0, cognitive_rigidness: 0 });
 
     const avgDimensions = {
         chaos: Math.round(totalDims.chaos / count),
         logic: Math.round(totalDims.logic / count),
         empathy: Math.round(totalDims.empathy / count),
         mysticism: Math.round(totalDims.mysticism / count),
+        cognitive_rigidness: Math.round(totalDims.cognitive_rigidness / count),
     };
 
     // B. Merge Keywords (Set Union to remove duplicates)
@@ -98,6 +106,8 @@ export function aggregateSoul(
         archetype: latest.archetype,
         visual_seed: latest.visual_seed,
         soul_color: latest.soul_color,
-        summary: latest.summary
+        summary: latest.summary,
+        core_tension: latest.core_tension,
+        narrative_arc: latest.narrative_arc
     };
 }

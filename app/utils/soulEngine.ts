@@ -3,6 +3,7 @@ export interface SoulDimensions {
     logic: number;
     empathy: number;
     mysticism: number;
+    cognitive_rigidness: number; // Project Mythos Addition
 }
 
 export interface SoulJSON {
@@ -11,14 +12,12 @@ export interface SoulJSON {
     archetype: string;
     keywords: string[];
     summary?: string;
-    dimensions: {
-        chaos: number;
-        logic: number;
-        empathy: number;
-        mysticism: number;
-    };
+    dimensions: SoulDimensions; // Use the interface
     visual_seed: string;
     soul_color?: string;
+    // Project Mythos Additions (Top level strings)
+    core_tension: string;
+    narrative_arc: string;
 }
 
 /**
@@ -174,7 +173,8 @@ const PROJECTION_VECTORS: SoulDimensions[] = (() => {
             chaos: rng.next() * 2 - 1,   // -1 to 1
             logic: rng.next() * 2 - 1,
             empathy: rng.next() * 2 - 1,
-            mysticism: rng.next() * 2 - 1
+            mysticism: rng.next() * 2 - 1,
+            cognitive_rigidness: rng.next() * 2 - 1 // Include new dimension
         });
     }
     return vectors;
@@ -196,7 +196,8 @@ export function generateSoulHash(dims: SoulDimensions): string {
             (dims.chaos * plane.chaos) +
             (dims.logic * plane.logic) +
             (dims.empathy * plane.empathy) +
-            (dims.mysticism * plane.mysticism);
+            (dims.mysticism * plane.mysticism) +
+            (dims.cognitive_rigidness * plane.cognitive_rigidness);
 
         hash += (dotProduct >= 0) ? '1' : '0';
     }

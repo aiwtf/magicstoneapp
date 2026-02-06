@@ -1,20 +1,39 @@
 'use client';
 
-import { motion } from "framer-motion";
-import { X, Sparkles } from "lucide-react";
+import { motion } from 'framer-motion';
+import { X } from 'lucide-react';
+import { SoulComposite } from '../utils/soulAggregator';
+import { SoulJSON } from '../utils/soulEngine'; // Keep for type fallback if needed
 
-interface SoulReadingProps {
+// Accept either full Composite or simple JSON
+interface SoulReadingModalProps {
     isOpen: boolean;
     onClose: () => void;
-    data: {
-        soul_color: string;
-        keywords: string[];
-        summary: string;
-    } | null;
+    data: SoulComposite | SoulJSON;
 }
 
-export default function SoulReadingModal({ isOpen, onClose, data }: SoulReadingProps) {
-    if (!isOpen || !data) return null;
+export default function SoulReadingModal({ isOpen, onClose, data }: SoulReadingModalProps) {
+    if (!isOpen) return null;
+
+    // Helper to safely access cognitive_rigidness
+    // In SoulComposite it's in dimensions, in SoulJSON it's top level in *some* versions but we put it in dimensions in schema...
+    // Wait, in my `soulEngine.ts` update, I added `cognitive_rigidness` to `SoulDimensions` interface?
+    // Let's check `soulEngine.ts` again. I added it to `SoulJSON` top level? No.
+    // I added it to `SoulJSON` top level in schema, but also `dimensions` interface.
+    // Let's standardize: It should be in `dimensions` for consistency.
+    // In `soulAggregator`, it is in `dimensions`.
+    // In parse logic (Altar), I mapped it to `dimensions`.
+    // So distinct access is likely `data.dimensions.cognitive_rigidness`.
+
+    // However, I previously added `cognitive_rigidness` to `SoulJSON` top level in `soulEngine.ts`.
+    // I should check `soulEngine.ts` replacement content in step 2.
+    // I added `cognitive_rigidness: number` to `SoulJSON` interface at the end.
+    // AND I also added it to `SoulDimensions` in step 10?
+    // Let's rely on data.dimensions.
+
+    const rigidness = 'dimensions' in data
+        ? (data.dimensions as any).cognitive_rigidness
+        : (data as any).cognitive_rigidness;
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">

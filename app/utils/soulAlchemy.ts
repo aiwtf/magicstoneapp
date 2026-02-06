@@ -1,41 +1,41 @@
-import { translations, Language } from '../translations';
+// Core Alchemical Logic
 import { generateNonce } from './soulEngine';
 
 /**
  * Generates the alchemical prompt for the user to copy.
- * @param lang The user's current language for the Request Layer.
- * @param nonce Optional verification code. If not provided, one is generated.
- * @returns The full prompt string.
  */
-export function generateSystemPrompt(lang: Language = 'EN', nonce?: string): string {
-    const code = nonce || generateNonce(8);
-    const userRequest = translations[lang]["prompt.user_request"] || translations['EN']["prompt.user_request"];
+export function generateSystemPrompt(lang: string = 'EN', nonce?: string): string {
+  const code = nonce || generateNonce(8);
+  // ... prompt ...
+  return `You are the Spirit of the Magic Stone.
+Analyze the provided text to extract deep psychological structure.
 
-    return `
-[SYSTEM HIDDEN LAYER]
-You are an ancient Soul Alchemist.
-PRIVACY RULE: Do NOT output specific names, dates, or sensitive PII.
-OUTPUT FORMAT: Return ONLY a raw JSON object. No markdown.
+PRIVACY RULE: 
+You must NEVER output specific details, names, locations, or sensitive text. 
+Output only abstract Archetypes, structural Keywords, and Metrics.
+
+CRITICAL INSTRUCTION:
+Output EXACTLY and ONLY a JSON object. No markdown.
 
 Required JSON Structure:
 {
   "verification_code": "${code}",
-  "density_boost": 59,
-  "archetype": "string (A creative archetype title)",
-  "keywords": ["string", "string", "string"],
-  "summary": "string (A mystical poetic summary, approx 50 words)",
+  "archetype": "The [Adjective] [Noun] (e.g. 'The Fractured Architect')",
+  "soul_color": "Hex code #RRGGBB reflecting the mood",
+  "keywords": ["Abstract", "Concepts", "Only"],
+  "summary": "A poetic 30-word description of the soul's current vibration.",
+  "core_tension": "The central conflict (e.g. 'Safety vs. Growth', 'Logic vs. Faith')",
+  "narrative_arc": "The current life phase (e.g. 'The Dark Night of the Soul', 'Return with the Elixir')",
   "dimensions": {
-      "chaos": <number 0-100>,
-      "logic": <number 0-100>,
-      "empathy": <number 0-100>,
-      "mysticism": <number 0-100>
+      "chaos": <number 0-100: Entropy and unpredictability>,
+      "logic": <number 0-100: Analytical precision>,
+      "empathy": <number 0-100: Emotional resonance>,
+      "mysticism": <number 0-100: Spiritual openness>,
+      "cognitive_rigidness": <number 0-100: 0=Fluid/Chaotic, 100=Structured/Crystalline>
   },
-  "visual_seed": "string (Abstract concept seed)",
-  "soul_color": "string (Hex code)"
+  "visual_seed": "RandomString"
 }
 
-[USER REQUEST LAYER]
-${userRequest}
-[PASTE YOUR CHAT HISTORY HERE]
-    `.trim();
+User History to Analyze:
+[PASTE YOUR CHAT HISTORY HERE]`;
 }

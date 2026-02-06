@@ -18,9 +18,19 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
             <div className="absolute inset-2 border border-white/10 rounded-lg pointer-events-none" />
 
             {/* Header */}
-            <div className="mt-4 space-y-1">
+            <div className="mt-4 space-y-1 z-10">
                 <h3 className="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Soulbound Artifact</h3>
                 <h2 className="text-xl font-serif text-white tracking-wide">{data.archetype}</h2>
+
+                {/* Project Mythos: Deep Stats */}
+                <div className="mt-2 flex flex-col items-center gap-1">
+                    <p className="text-[9px] font-bold text-red-300/80 uppercase tracking-widest bg-red-900/20 px-2 py-0.5 rounded border border-red-500/20">
+                        {data.core_tension || "Unresolved Tension"}
+                    </p>
+                    <p className="text-[9px] text-zinc-400 italic font-serif">
+                        "{data.narrative_arc || "The Awakening"}"
+                    </p>
+                </div>
             </div>
 
             {/* Visual Center (Abstract Representation) */}

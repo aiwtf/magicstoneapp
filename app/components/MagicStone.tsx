@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { MeshDistortMaterial, Sphere, Float, Stars, Sparkles } from '@react-three/drei';
+import { MeshDistortMaterial, Sphere, Icosahedron, Float, Stars, Sparkles } from '@react-three/drei';
 import * as THREE from 'three';
 import { SoulComposite } from '../utils/soulAggregator';
 
@@ -16,42 +16,52 @@ interface MagicStoneProps {
 export default function MagicStone({ soul, onClick }: MagicStoneProps) {
     const meshRef = useRef<THREE.Mesh>(null);
 
-    // 1. Default State (Empty / Void)
+    // 1. Default State
     const defaultColor = "#4a4a4a";
 
-    // 2. Extract Soul Data
-    // Handle both possible structures if mixed, but prefer SoulComposite
+    // 2. Extract Data
     const density = soul?.density || 0;
     const chaos = soul?.dimensions?.chaos || 0;
+    // Use rigidness to control geometry detail: 0 (Organic/Sphere) <-> 100 (Geometric/Crystal)
+    // Actually, Icosahedron detail=0 is Crystal (20 faces). Detail=5 is Sphere.
+    // So High Rigidness (100) -> Detail 0. Low Rigidness (0) -> Detail 4.
+    const rigidness = soul?.dimensions?.cognitive_rigidness ?? 50;
     const color = soul?.soul_color || defaultColor;
 
-    // 3. Calculate Visual Parameters based on Density
-    // Lerp function helper
+    // 3. Visual Logic
     const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * t;
-
-    // Visual Logic:
-    // As density goes 0 -> 1:
-    // Roughness: 0.8 (Foggy) -> 0.1 (Shiny)
-    // Metalness: 0.0 (Plastic) -> 0.7 (Metal)
-    // Distortion: High (Unstable) -> Low (Stable) (Also affected by Chaos)
 
     const roughness = lerp(0.8, 0.1, density);
     const metalness = lerp(0.1, 0.7, density);
-    const transmission = lerp(1.0, 0.2, density); // Ghost -> Solid
+    const transmission = lerp(1.0, 0.2, density);
 
-    // Chaos affects the "Speed" and "Distort" amount
-    // If Soul is Chaotic (chaos=100), it keeps moving even when solid.
-    // Note: Chaos 0-100 needs scaling
     const chaosFactor = chaos / 100;
-    const distortAmount = lerp(0.6, 0.2, density) + (chaosFactor * 0.4);
+    const distortAmount = lerp(0.6, 0.1, density) + (chaosFactor * 0.4);
     const distortSpeed = lerp(2, 0.5, density) + (chaosFactor * 2.0);
+
+    // Geometric Detail (Shape Morphology)
+    // rigidness 100 -> detail 0
+    // rigidness 0 -> detail 4
+    const detail = Math.round(4 * (1 - (rigidness / 100)));
 
     useFrame((state, delta) => {
         if (meshRef.current) {
-            // Gentle rotation - faster if low density (unstable)
+            const time = state.clock.elapsedTime;
+
+            // Rotation
             const rotationSpeed = 0.2 + (1 - density) * 0.5;
             meshRef.current.rotation.y += delta * rotationSpeed;
             meshRef.current.rotation.x += delta * (rotationSpeed * 0.5);
+
+            // Emissive Pulse (Entropy/Chaos driven)
+            // Pulse intensity proportional to chaos
+            // Base emissive 0, Pulse up to chaosFactor
+            // Frequency also driven by chaos
+            if (meshRef.current.material instanceof THREE.MeshPhysicalMaterial) {
+                const pulse = (Math.sin(time * (1 + chaosFactor * 5)) + 1) * 0.5; // 0 to 1
+                meshRef.current.material.emissive.set(color);
+                meshRef.current.material.emissiveIntensity = 0.1 + (pulse * chaosFactor * 2);
+            }
         }
     });
 
@@ -66,9 +76,9 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
                 rotationIntensity={1} // XYZ rotation intensity
                 floatIntensity={2} // Up/down float intensity
             >
-                <Sphere
+                <Icosahedron
                     ref={meshRef}
-                    args={[1, 64, 64]}
+                    args={[1, detail]} // Dynamic Geometry
                     scale={1.5}
                     onClick={(e) => {
                         e.stopPropagation();
@@ -85,12 +95,12 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
                         clearcoatRoughness={0.1}
                         metalness={metalness}
                         roughness={roughness}
-                        transmission={transmission} // Glass-like transmission
-                        thickness={2} // Refraction thickness
-                        distort={distortAmount} // Wobble amount
-                        speed={distortSpeed} // Wobble speed
+                        transmission={transmission}
+                        thickness={2}
+                        distort={distortAmount}
+                        speed={distortSpeed}
                     />
-                </Sphere>
+                </Icosahedron>
             </Float>
 
             {/* Particle Effects (Only appear when density > 0) */}
