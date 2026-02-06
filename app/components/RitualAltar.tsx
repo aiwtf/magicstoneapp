@@ -105,17 +105,23 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                     id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                     source: selectedOracle,
                     timestamp: Date.now(),
-                    archetype: rawData.archetype,
-                    keywords: rawData.keywords || [],
-                    dimensions: {
-                        ...rawData.dimensions,
-                        cognitive_rigidness: rawData.dimensions?.cognitive_rigidness ?? 50
+
+                    archetype_name: rawData.archetype_name || "Unknown Soul",
+                    archetype_description: rawData.archetype_description || "",
+                    mbti_type: rawData.mbti_type,
+                    enneagram_type: rawData.enneagram_type,
+                    core_tension: rawData.core_tension || "Unresolved",
+                    narrative_phase: rawData.narrative_phase || "Wandering",
+                    cognitive_biases: rawData.cognitive_biases || [],
+
+                    dimensions: rawData.dimensions || {
+                        structure: 50, luminosity: 50, resonance: 50, ethereal: 50,
+                        volatility: 50, entropy: 50, cognitive_rigidness: 50, narrative_depth: 50
                     },
+
                     visual_seed: rawData.visual_seed || 'void',
-                    soul_color: rawData.soul_color || '#a855f7',
-                    summary: rawData.summary || 'A mysterious silence...',
-                    core_tension: rawData.core_tension || 'Unknown Conflict',
-                    narrative_arc: rawData.narrative_arc || 'The Beginning'
+                    soul_color: rawData.soul_color || '#a855f7', // Default purple for now
+                    keywords: rawData.keywords || []
                 };
 
                 setTimeout(() => onInitialize(fragment), 800);

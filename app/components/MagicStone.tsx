@@ -19,29 +19,39 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
     // 1. Default State
     const defaultColor = "#4a4a4a";
 
-    // 2. Extract Data
+    // 2. Extract Data (Unified Schema)
     const density = soul?.density || 0;
-    const chaos = soul?.dimensions?.chaos || 0;
-    // Use rigidness to control geometry detail: 0 (Organic/Sphere) <-> 100 (Geometric/Crystal)
-    // Actually, Icosahedron detail=0 is Crystal (20 faces). Detail=5 is Sphere.
-    // So High Rigidness (100) -> Detail 0. Low Rigidness (0) -> Detail 4.
-    const rigidness = soul?.dimensions?.cognitive_rigidness ?? 50;
+    const dims = soul?.dimensions;
+
+    const rigidness = dims?.cognitive_rigidness ?? 50;
+    const entropy = dims?.entropy ?? 0;
+    const structure = dims?.structure ?? 50;
+    const ethereal = dims?.ethereal ?? 50;
+
     const color = soul?.soul_color || defaultColor;
 
     // 3. Visual Logic
     const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * t;
 
-    const roughness = lerp(0.8, 0.1, density);
-    const metalness = lerp(0.1, 0.7, density);
-    const transmission = lerp(1.0, 0.2, density);
+    // Structure determines Polish (Roughness)
+    // High Structure (100) -> Very Smooth/Polished (Roughness 0.1)
+    // Low Structure (0) -> Rough/Matte (Roughness 0.9)
+    const roughness = 0.9 - (structure / 100) * 0.8;
 
-    const chaosFactor = chaos / 100;
-    const distortAmount = lerp(0.6, 0.1, density) + (chaosFactor * 0.4);
-    const distortSpeed = lerp(2, 0.5, density) + (chaosFactor * 2.0);
+    // Density still boosts "Solidness" (Metalness)
+    const metalness = lerp(0.1, 0.8, density);
+
+    // Ethereal determines Transparency (Transmission)
+    // High Ethereal -> Glassy/Transparent
+    const transmission = lerp(0.2, 1.0, ethereal / 100);
+
+    const entropyFactor = entropy / 100;
+    const distortAmount = lerp(0.5, 0.0, structure / 100) + (entropyFactor * 0.3);
+    const distortSpeed = lerp(1, 4, entropyFactor);
 
     // Geometric Detail (Shape Morphology)
-    // rigidness 100 -> detail 0
-    // rigidness 0 -> detail 4
+    // rigidness 100 -> detail 0 (Icosahedron/Crystal)
+    // rigidness 0 -> detail 4 (Sphere/Organic)
     const detail = Math.round(4 * (1 - (rigidness / 100)));
 
     useFrame((state, delta) => {
@@ -53,14 +63,11 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
             meshRef.current.rotation.y += delta * rotationSpeed;
             meshRef.current.rotation.x += delta * (rotationSpeed * 0.5);
 
-            // Emissive Pulse (Entropy/Chaos driven)
-            // Pulse intensity proportional to chaos
-            // Base emissive 0, Pulse up to chaosFactor
-            // Frequency also driven by chaos
+            // Emissive Pulse (Entropy driven)
             if (meshRef.current.material instanceof THREE.MeshPhysicalMaterial) {
-                const pulse = (Math.sin(time * (1 + chaosFactor * 5)) + 1) * 0.5; // 0 to 1
+                const pulse = (Math.sin(time * (1 + entropyFactor * 5)) + 1) * 0.5; // 0 to 1
                 meshRef.current.material.emissive.set(color);
-                meshRef.current.material.emissiveIntensity = 0.1 + (pulse * chaosFactor * 2);
+                meshRef.current.material.emissiveIntensity = 0.1 + (pulse * entropyFactor * 3);
             }
         }
     });

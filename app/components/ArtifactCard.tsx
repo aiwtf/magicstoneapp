@@ -18,40 +18,38 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
             <div className="absolute inset-2 border border-white/10 rounded-lg pointer-events-none" />
 
             {/* Header */}
-            <div className="mt-4 space-y-1 z-10">
+            <div className="mt-4 space-y-1 z-10 w-full px-6 text-center relative">
                 <h3 className="text-[10px] tracking-[0.3em] text-zinc-500 uppercase">Soulbound Artifact</h3>
-                <h2 className="text-xl font-serif text-white tracking-wide">{data.archetype}</h2>
+                <h2 className="text-xl font-serif text-white tracking-wide">{data.archetype_name || (data as any).archetype}</h2>
 
-                {/* Project Mythos: Deep Stats */}
-                <div className="mt-2 flex flex-col items-center gap-1">
-                    <p className="text-[9px] font-bold text-red-300/80 uppercase tracking-widest bg-red-900/20 px-2 py-0.5 rounded border border-red-500/20">
-                        {data.core_tension || "Unresolved Tension"}
-                    </p>
-                    <p className="text-[9px] text-zinc-400 italic font-serif">
-                        "{data.narrative_arc || "The Awakening"}"
-                    </p>
+                {/* Badges (MBTI / Enneagram) */}
+                <div className="flex justify-center gap-2 mt-1">
+                    {data.mbti_type && (
+                        <span className="text-[9px] font-mono border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded text-cyan-400">
+                            {data.mbti_type}
+                        </span>
+                    )}
+                    {data.enneagram_type && (
+                        <span className="text-[9px] font-mono border border-zinc-700 bg-zinc-900/50 px-1.5 py-0.5 rounded text-purple-400">
+                            {data.enneagram_type}
+                        </span>
+                    )}
                 </div>
             </div>
 
-            {/* Visual Center (Abstract Representation) */}
-            <div className="flex-1 w-full flex items-center justify-center my-4">
-                <div className="relative w-48 h-48 rounded-full flex items-center justify-center">
-                    {/* Aura Halo - Pulsing */}
-                    <div className="absolute inset-0 rounded-full blur-3xl opacity-40 animate-pulse" style={{ backgroundColor: data.soul_color }} />
-
-                    {/* Core (Simulating the Stone 2D fallback) */}
-                    <div
-                        className="w-32 h-32 rounded-full shadow-inner border border-white/20 relative overflow-hidden transition-transform duration-700 group-hover:scale-105"
+            {/* Visual Core */}
+            <div className="relative w-64 h-64 my-4 flex items-center justify-center">
+                <div className="w-48 h-48 rounded-full border-4 border-double border-white/10 flex items-center justify-center bg-black/50 overflow-hidden relative">
+                    {/* Abstract visual representation based on color */}
+                    <div className="absolute inset-0 opacity-50 contrast-125"
                         style={{
-                            background: `radial-gradient(circle at 30% 30%, ${data.soul_color}, #000)`
+                            background: `radial-gradient(circle at 30% 30%, ${data.soul_color}, transparent 60%),
+                                  radial-gradient(circle at 70% 70%, #000, transparent)`
                         }}
-                    >
-                        {/* Noise texture for detail */}
-                        <div className="absolute inset-0 bg-noise opacity-30 mix-blend-overlay" />
-
-                        {/* Shine reflection */}
-                        <div className="absolute top-4 left-4 w-10 h-10 bg-white/10 blur-xl rounded-full" />
-                    </div>
+                    />
+                    {/* Shine */}
+                    <div className="absolute top-4 left-4 w-10 h-10 bg-white/10 blur-xl rounded-full" />
+                    <div className="text-white/20 text-4xl relative z-10">💎</div>
                 </div>
             </div>
 
@@ -70,6 +68,6 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
             <p className="absolute bottom-2 text-[8px] text-zinc-700 font-mono">
                 HASH: {soulId.slice(0, 12)}...
             </p>
-        </div>
+        </div >
     );
 }

@@ -1,23 +1,30 @@
 export interface SoulDimensions {
-    chaos: number;
-    logic: number;
-    empathy: number;
-    mysticism: number;
-    cognitive_rigidness: number; // Project Mythos Addition
+    structure: number;      // Conscientiousness
+    luminosity: number;     // Extraversion
+    resonance: number;      // Agreeableness
+    ethereal: number;       // Openness
+    volatility: number;     // Neuroticism
+    entropy: number;        // Complexity
+    cognitive_rigidness: number; // Logic vs Intuition
+    narrative_depth: number; // Story depth
 }
 
 export interface SoulJSON {
     verification_code?: string;
-    density_boost?: number;
-    archetype: string;
-    keywords: string[];
-    summary?: string;
-    dimensions: SoulDimensions; // Use the interface
-    visual_seed: string;
+    // Generated or Enhanced fields
+    visual_seed?: string;
     soul_color?: string;
-    // Project Mythos Additions (Top level strings)
+    keywords?: string[];
+
+    // Core AI Response
+    archetype_name: string;
+    archetype_description?: string;
+    mbti_type?: string;
+    enneagram_type?: string;
     core_tension: string;
-    narrative_arc: string;
+    narrative_phase: string;
+    dimensions: SoulDimensions;
+    cognitive_biases: string[];
 }
 
 /**
@@ -170,11 +177,14 @@ const PROJECTION_VECTORS: SoulDimensions[] = (() => {
     const vectors: SoulDimensions[] = [];
     for (let i = 0; i < HASH_BITS; i++) {
         vectors.push({
-            chaos: rng.next() * 2 - 1,   // -1 to 1
-            logic: rng.next() * 2 - 1,
-            empathy: rng.next() * 2 - 1,
-            mysticism: rng.next() * 2 - 1,
-            cognitive_rigidness: rng.next() * 2 - 1 // Include new dimension
+            structure: rng.next() * 2 - 1,
+            luminosity: rng.next() * 2 - 1,
+            resonance: rng.next() * 2 - 1,
+            ethereal: rng.next() * 2 - 1,
+            volatility: rng.next() * 2 - 1,
+            entropy: rng.next() * 2 - 1,
+            cognitive_rigidness: rng.next() * 2 - 1,
+            narrative_depth: rng.next() * 2 - 1
         });
     }
     return vectors;
@@ -193,11 +203,14 @@ export function generateSoulHash(dims: SoulDimensions): string {
     let hash = '';
     for (const plane of PROJECTION_VECTORS) {
         const dotProduct =
-            (dims.chaos * plane.chaos) +
-            (dims.logic * plane.logic) +
-            (dims.empathy * plane.empathy) +
-            (dims.mysticism * plane.mysticism) +
-            (dims.cognitive_rigidness * plane.cognitive_rigidness);
+            (dims.structure * plane.structure) +
+            (dims.luminosity * plane.luminosity) +
+            (dims.resonance * plane.resonance) +
+            (dims.ethereal * plane.ethereal) +
+            (dims.volatility * plane.volatility) +
+            (dims.entropy * plane.entropy) +
+            (dims.cognitive_rigidness * plane.cognitive_rigidness) +
+            (dims.narrative_depth * plane.narrative_depth);
 
         hash += (dotProduct >= 0) ? '1' : '0';
     }

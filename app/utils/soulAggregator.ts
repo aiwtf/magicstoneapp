@@ -1,47 +1,49 @@
 
 // 1. Define the input: A single fragment from an AI ritual
+import { SoulDimensions } from './soulEngine';
+
 export interface SoulFragment {
-    id: string;             // Unique ID (timestamp + random)
+    id: string;
     source: 'ChatGPT' | 'Gemini' | 'Claude' | 'Unknown';
-    // 'Unknown' added to handle legacy or general cases
     timestamp: number;
-    archetype: string;
-    keywords: string[];
-    dimensions: {
-        chaos: number;
-        logic: number;
-        empathy: number;
-        mysticism: number;
-        cognitive_rigidness: number; // New metric
-    };
+
+    // Unified Schema Fields
+    archetype_name: string;
+    archetype_description?: string;
+    mbti_type?: string;
+    enneagram_type?: string;
+    core_tension?: string;
+    narrative_phase?: string;
+    cognitive_biases?: string[];
+    keywords: string[]; // Maintained for app functionality
+
+    dimensions: SoulDimensions;
+
+    // Visual/Meta
     visual_seed: string;
     soul_color: string;
-    summary: string;
-    core_tension: string; // New
-    narrative_arc: string; // New
+    summary?: string; // Legacy/Fallback
 }
 
-// 2. Define the output: The combined "Philosopher's Stone" state
 export interface SoulComposite {
-    fragments: SoulFragment[]; // History of all injections
-    density: number;           // 0.0 to 1.0 (The progress bar)
+    fragments: SoulFragment[];
+    density: number;
 
     // Aggregated Stats
-    dimensions: {
-        chaos: number;
-        logic: number;
-        empathy: number;
-        mysticism: number;
-        cognitive_rigidness: number;
-    };
+    dimensions: SoulDimensions;
+    keywords: string[]; // Maintained for app functionality
 
-    keywords: string[];        // Union of all keywords
-    archetype: string;         // The latest or dominant archetype
-    visual_seed: string;       // The active seed for rendering
-    soul_color: string;        // Latest color
-    summary: string;           // Latest summary
-    core_tension: string;      // Latest tension
-    narrative_arc: string;     // Latest arc
+    // Latest Meta
+    archetype_name: string;
+    archetype_description?: string;
+    mbti_type?: string;
+    enneagram_type?: string;
+    core_tension: string;
+    narrative_phase: string;
+    cognitive_biases: string[];
+
+    visual_seed: string;
+    soul_color: string;
 }
 
 // 3. Density Curve Logic
@@ -74,20 +76,30 @@ export function aggregateSoul(
 
     // A. Average the Dimensions
     // We re-calculate from scratch to avoid floating point drift
+    // 2. Average Dimensions
     const totalDims = allFragments.reduce((acc, frag) => ({
-        chaos: acc.chaos + frag.dimensions.chaos,
-        logic: acc.logic + frag.dimensions.logic,
-        empathy: acc.empathy + frag.dimensions.empathy,
-        mysticism: acc.mysticism + frag.dimensions.mysticism,
-        cognitive_rigidness: acc.cognitive_rigidness + (frag.dimensions.cognitive_rigidness || 0),
-    }), { chaos: 0, logic: 0, empathy: 0, mysticism: 0, cognitive_rigidness: 0 });
+        structure: acc.structure + frag.dimensions.structure,
+        luminosity: acc.luminosity + frag.dimensions.luminosity,
+        resonance: acc.resonance + frag.dimensions.resonance,
+        ethereal: acc.ethereal + frag.dimensions.ethereal,
+        volatility: acc.volatility + frag.dimensions.volatility,
+        entropy: acc.entropy + frag.dimensions.entropy,
+        cognitive_rigidness: acc.cognitive_rigidness + frag.dimensions.cognitive_rigidness,
+        narrative_depth: acc.narrative_depth + frag.dimensions.narrative_depth,
+    }), {
+        structure: 0, luminosity: 0, resonance: 0, ethereal: 0,
+        volatility: 0, entropy: 0, cognitive_rigidness: 0, narrative_depth: 0
+    });
 
-    const avgDimensions = {
-        chaos: Math.round(totalDims.chaos / count),
-        logic: Math.round(totalDims.logic / count),
-        empathy: Math.round(totalDims.empathy / count),
-        mysticism: Math.round(totalDims.mysticism / count),
+    const avgDimensions: SoulDimensions = {
+        structure: Math.round(totalDims.structure / count),
+        luminosity: Math.round(totalDims.luminosity / count),
+        resonance: Math.round(totalDims.resonance / count),
+        ethereal: Math.round(totalDims.ethereal / count),
+        volatility: Math.round(totalDims.volatility / count),
+        entropy: Math.round(totalDims.entropy / count),
         cognitive_rigidness: Math.round(totalDims.cognitive_rigidness / count),
+        narrative_depth: Math.round(totalDims.narrative_depth / count),
     };
 
     // B. Merge Keywords (Set Union to remove duplicates)
@@ -102,12 +114,19 @@ export function aggregateSoul(
         fragments: allFragments,
         density: calculateDensity(count),
         dimensions: avgDimensions,
-        keywords: Array.from(keywordSet).slice(0, 15), // Keep top 15 tags
-        archetype: latest.archetype,
+        // Union of keywords
+        keywords: Array.from(keywordSet).slice(0, 15),
+
+        // Meta from latest
+        archetype_name: latest.archetype_name,
+        archetype_description: latest.archetype_description,
+        mbti_type: latest.mbti_type,
+        enneagram_type: latest.enneagram_type,
+        core_tension: latest.core_tension || "Unresolved",
+        narrative_phase: latest.narrative_phase || "Wandering",
+        cognitive_biases: latest.cognitive_biases || [],
+
         visual_seed: latest.visual_seed,
-        soul_color: latest.soul_color,
-        summary: latest.summary,
-        core_tension: latest.core_tension,
-        narrative_arc: latest.narrative_arc
+        soul_color: latest.soul_color
     };
 }

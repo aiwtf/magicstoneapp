@@ -41,12 +41,22 @@ export default function SoulRadar({ userSoul, onClose }: SoulRadarProps) {
 
             // Randomly spawn a ghost (30% chance per tick)
             if (Math.random() > 0.7) {
+                // Use userSoul dimensions as a base, or a default if userSoul.dimensions were somehow undefined (though typed as required)
+                const baseDims = userSoul.dimensions || {
+                    structure: 50, luminosity: 50, resonance: 50, ethereal: 50,
+                    volatility: 50, entropy: 50, cognitive_rigidness: 50, narrative_depth: 50
+                };
+
+                // Generate ghost dimensions by perturbing the base dimensions
                 const randomDims: SoulDimensions = {
-                    chaos: Math.random() * 100,
-                    logic: Math.random() * 100,
-                    empathy: Math.random() * 100,
-                    mysticism: Math.random() * 100,
-                    cognitive_rigidness: Math.random() * 100 // Added cognitive_rigidness
+                    structure: Math.max(0, Math.min(100, baseDims.structure + (Math.random() - 0.5) * 40)),
+                    luminosity: Math.max(0, Math.min(100, baseDims.luminosity + (Math.random() - 0.5) * 40)),
+                    resonance: Math.max(0, Math.min(100, baseDims.resonance + (Math.random() - 0.5) * 40)),
+                    ethereal: Math.max(0, Math.min(100, baseDims.ethereal + (Math.random() - 0.5) * 40)),
+                    volatility: Math.max(0, Math.min(100, baseDims.volatility + (Math.random() - 0.5) * 40)),
+                    entropy: Math.max(0, Math.min(100, baseDims.entropy + (Math.random() - 0.5) * 40)),
+                    cognitive_rigidness: Math.max(0, Math.min(100, baseDims.cognitive_rigidness + (Math.random() - 0.5) * 40)),
+                    narrative_depth: Math.max(0, Math.min(100, baseDims.narrative_depth + (Math.random() - 0.5) * 40))
                 };
                 const ghostHash = generateSoulHash(randomDims);
                 const resonance = calculateResonance(userHash, ghostHash);

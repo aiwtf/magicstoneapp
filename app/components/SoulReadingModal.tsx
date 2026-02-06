@@ -63,10 +63,10 @@ export default function SoulReadingModal({ isOpen, onClose, data }: SoulReadingM
                         transition={{ delay: 0.2 }}
                     >
                         <h2 className="text-2xl font-bold tracking-widest uppercase text-white mb-1">
-                            Soul Awakened
+                            {(data as any).archetype_name || (data as any).archetype}
                         </h2>
                         <div className="flex justify-center gap-2 mb-6">
-                            {data.keywords.map((kw, i) => (
+                            {(data.keywords || []).map((kw: string, i: number) => (
                                 <span key={i}
                                     className="px-3 py-1 text-xs rounded-full border border-white/20 bg-white/5 tracking-wider"
                                     style={{ borderColor: data.soul_color }}
@@ -83,7 +83,7 @@ export default function SoulReadingModal({ isOpen, onClose, data }: SoulReadingM
                         transition={{ delay: 0.5, duration: 1 }}
                         className="text-lg leading-relaxed text-gray-200 font-light italic"
                     >
-                        "{data.summary}"
+                        "{(data as any).archetype_description || (data as any).summary}"
                     </motion.div>
 
                     <div className="pt-4">
