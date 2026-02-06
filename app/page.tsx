@@ -80,7 +80,7 @@ export default function Home() {
 
         {/* The Magic Stone Component */}
         <div className="py-4 cursor-pointer" onClick={() => isInitialized && setShowModal(true)}>
-          <MagicStone isAbsorbing={isAbsorbing} progress={progress} />
+          <MagicStone isAbsorbing={isAbsorbing} progress={progress} soulData={reading} />
         </div>
 
         {/* Input Area (Only show if initialized, for "Chat to Grow" feature) */}

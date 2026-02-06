@@ -1,65 +1,52 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, ArrowRight, Sparkles, AlertCircle } from 'lucide-react';
+import { Copy, Sparkles, AlertCircle } from 'lucide-react';
+import { generateNonce, generateIncantation, validateSoulJSON, SoulJSON } from '../utils/soulEngine';
 
 interface IncantationModalProps {
-    onInitialize: (data: any) => void;
+    onInitialize: (data: SoulJSON) => void;
 }
-
-const INCANTATION_PROMPT = `You are the Spirit of the Magic Stone.
-Analyze my following history and extract my Soul Data.
-Output ONLY a JSON object:
-{
-  "soul_color": "#HEXCODE",
-  "keywords": ["Keyword1", "Keyword2", "Keyword3"],
-  "summary": "A short mystical poetic summary of my soul."
-}
-
-User History:
-[PASTE YOUR CHAT HISTORY HERE]`;
 
 export default function IncantationModal({ onInitialize }: IncantationModalProps) {
     const [step, setStep] = useState<'copy' | 'paste'>('copy');
     const [jsonInput, setJsonInput] = useState('');
     const [error, setError] = useState('');
+    const [nonce, setNonce] = useState('');
+    const [incantation, setIncantation] = useState('');
+
+    useEffect(() => {
+        const newNonce = generateNonce();
+        setNonce(newNonce);
+        setIncantation(generateIncantation(newNonce));
+    }, []);
 
     const copyIncantation = () => {
-        navigator.clipboard.writeText(INCANTATION_PROMPT);
+        navigator.clipboard.writeText(incantation);
         setStep('paste');
     };
 
     const handleVerify = () => {
         try {
-            // Find the JSON object within the text (in case they pasted extra text)
-            const jsonMatch = jsonInput.match(/\{[\s\S]*\}/);
-            const jsonString = jsonMatch ? jsonMatch[0] : jsonInput;
-
-            const data = JSON.parse(jsonString);
-
-            // Simple validation
-            if (!data.soul_color || !data.keywords || !data.summary) {
-                throw new Error("Invalid Soul JSON format");
-            }
-
+            const data = validateSoulJSON(jsonInput, nonce);
             onInitialize(data);
         } catch (e) {
-            setError("The stone rejects this offering. Ensure it is valid JSON.");
+            setError(e instanceof Error ? e.message : "Soul Resonance Failed.");
         }
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-            <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/95 backdrop-blur-xl">
+            <div className="w-full max-w-md bg-zinc-900/50 border border-zinc-800/50 rounded-2xl overflow-hidden shadow-2xl backdrop-blur-md">
 
                 {/* Header */}
-                <div className="p-6 border-b border-zinc-800 text-center">
-                    <h2 className="text-xl font-bold text-white tracking-widest uppercase">
+                <div className="p-6 border-b border-zinc-800/50 text-center">
+                    <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 tracking-widest uppercase">
                         Soul Extraction
                     </h2>
-                    <p className="text-xs text-zinc-500 mt-2">
-                        {step === 'copy' ? 'Step 1: The Incantation' : 'Step 2: The Offering'}
+                    <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">
+                        {step === 'copy' ? 'Phase 1: Initiate Resonance' : 'Phase 2: Materialize Soul'}
                     </p>
                 </div>
 
@@ -69,29 +56,36 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                         {step === 'copy' ? (
                             <motion.div
                                 key="step-copy"
-                                initial={{ opacity: 0, x: -20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: 20 }}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 1.05 }}
                                 className="space-y-4"
                             >
-                                <p className="text-sm text-zinc-400 leading-relaxed text-center">
-                                    To awaken the stone, you must first extract your soul data from the AI archives.
+                                <p className="text-sm text-zinc-400 leading-relaxed text-center font-light">
+                                    To forge your Digital Soul, we must first resonate with your past echoes.
                                 </p>
 
-                                <div className="bg-black/50 p-4 rounded-lg border border-zinc-800 font-mono text-xs text-zinc-500 relative group">
-                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <Sparkles className="w-4 h-4 text-purple-500" />
+                                <div className="bg-black/80 p-4 rounded-lg border border-zinc-800 font-mono text-[10px] text-zinc-500 relative group overflow-hidden max-h-32">
+                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90 pointer-events-none"></div>
+                                    <div className="opacity-50">
+                                        {incantation}
                                     </div>
-                                    {INCANTATION_PROMPT.substring(0, 150)}...
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 backdrop-blur-[1px]">
+                                        <Sparkles className="w-6 h-6 text-purple-500 animate-pulse" />
+                                    </div>
                                 </div>
 
                                 <button
                                     onClick={copyIncantation}
-                                    className="w-full py-4 bg-white text-black font-bold uppercase tracking-wider rounded-lg hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-bold uppercase tracking-widest rounded-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                                 >
                                     <Copy className="w-4 h-4" />
                                     Copy Incantation
                                 </button>
+
+                                <p className="text-[10px] text-zinc-600 text-center">
+                                    Paste this into your AI Spirit Guide (ChatGPT/Gemini)
+                                </p>
                             </motion.div>
                         ) : (
                             <motion.div
@@ -101,8 +95,8 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                 exit={{ opacity: 0, x: -20 }}
                                 className="space-y-4"
                             >
-                                <p className="text-sm text-zinc-400 text-center">
-                                    Paste the JSON artifact returned by the AI.
+                                <p className="text-sm text-zinc-400 text-center font-light">
+                                    Receive the offering. Paste the Soul Artifact below.
                                 </p>
 
                                 <textarea
@@ -111,23 +105,27 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                         setJsonInput(e.target.value);
                                         setError('');
                                     }}
-                                    placeholder='{ "soul_color": "..." }'
-                                    className="w-full h-32 bg-black/50 border border-zinc-700 rounded-lg p-3 text-xs font-mono text-purple-300 focus:outline-none focus:border-purple-500 resize-none"
+                                    placeholder='Paste the JSON response here...'
+                                    className="w-full h-32 bg-black/50 border border-zinc-700/50 rounded-lg p-3 text-xs font-mono text-purple-300 focus:outline-none focus:border-purple-500/50 resize-none transition-colors placeholder:text-zinc-700"
                                 />
 
                                 {error && (
-                                    <div className="flex items-center gap-2 text-red-400 text-xs justify-center">
+                                    <motion.div
+                                        initial={{ opacity: 0, y: -10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="flex items-center gap-2 text-red-400 text-xs justify-center bg-red-900/10 p-2 rounded"
+                                    >
                                         <AlertCircle className="w-3 h-3" />
                                         {error}
-                                    </div>
+                                    </motion.div>
                                 )}
 
                                 <button
                                     onClick={handleVerify}
-                                    className="w-full py-4 bg-purple-600 text-white font-bold uppercase tracking-wider rounded-lg hover:bg-purple-500 transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold uppercase tracking-widest rounded-lg transition-all shadow-[0_0_20px_rgba(147,51,234,0.3)] flex items-center justify-center gap-2"
                                 >
                                     <Sparkles className="w-4 h-4" />
-                                    Awaken Stone
+                                    Materialize Stone
                                 </button>
                             </motion.div>
                         )}
