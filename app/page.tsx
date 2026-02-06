@@ -1,98 +1,131 @@
 'use client';
 
-import MagicStone from "./components/MagicStone";
+import { useState, useEffect } from "react";
 import SoulInput from "./components/SoulInput";
-import SoulReadingModal from "./components/SoulReadingModal";
+import MagicStone from "./components/MagicStone";
 import IncantationModal from "./components/IncantationModal";
+import SoulRadar from "./components/SoulRadar";
+import SoulReadingModal from "./components/SoulReadingModal";
 import { useSoulEngine } from "./hooks/useSoulEngine";
-import { Download, Info, Heart, Sparkles } from "lucide-react";
-import Link from "next/link";
-import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
-import { analyzeSoul } from "./actions";
+import { Sparkles, RefreshCw, Radio } from "lucide-react";
+import { AnimatePresence } from "framer-motion";
 
 export default function Home() {
   const { progress, logs, isAbsorbing, absorbSoul, initializeSoul } = useSoulEngine();
-  const [reading, setReading] = useState<any>(null);
-  const [isAwakening, setIsAwakening] = useState(false);
-  const [showModal, setShowModal] = useState(false);
 
-  // Check if soul is already awakened (initialized)
-  // We can assume if progress is 100, we are awakened.
-  // Or check if we have the specific initialization log.
-  const isInitialized = progress >= 100;
+  // Reconstruct soul data from logs if available
+  const soulLog = logs.find(l => l.startsWith("SOUL_INIT_JSON::"));
+  const soulData = soulLog ? JSON.parse(soulLog.replace("SOUL_INIT_JSON::", "")) : null;
+  const isInitialized = !!soulData;
 
-  // Derive reading data from logs if available (persistence)
-  // This is a quick hack to restore the reading if we just reloaded page after initialization
-  if (!reading && isInitialized) {
-    const initLog = logs.find(l => l.startsWith("SOUL_INIT_JSON::"));
-    if (initLog) {
-      try {
-        const json = JSON.parse(initLog.replace("SOUL_INIT_JSON::", ""));
-        setReading(json);
-      } catch (e) { }
-    }
-  }
-
-  const handleInitialization = (data: any) => {
-    initializeSoul(data);
-    setReading(data);
-    // Optional: Show value or just transition UI
-  };
-
-  const handleOpenReading = () => {
-    setShowModal(true);
-  };
+  const [showIncantation, setShowIncantation] = useState(false);
+  const [showRadar, setShowRadar] = useState(false);
+  const [showReading, setShowReading] = useState(false);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center relative overflow-hidden bg-black selection:bg-purple-900 selection:text-white">
+    <main className="flex min-h-screen flex-col items-center justify-center bg-black selection:bg-purple-900/30 relative overflow-hidden">
 
-      {/* Soul Extraction Onboarding */}
-      {!isInitialized && (
-        <IncantationModal onInitialize={handleInitialization} />
-      )}
+      {/* Background Ambience */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black pointer-events-none" />
 
-      {/* Soul Reading Modal (Profile view) */}
-      <AnimatePresence>
-        {showModal && <SoulReadingModal isOpen={showModal} onClose={() => setShowModal(false)} data={reading} />}
-      </AnimatePresence>
+      {/* Title */}
+      <h1 className="z-10 text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400/50 mb-8 tracking-tighter opacity-80">
+        MAGIC STONE
+      </h1>
 
-      {/* Background Ambience - dynamic based on progress */}
-      <div className="fixed inset-0 pointer-events-none transition-all duration-[3000ms]">
-        <div
-          className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(88,28,135,0.15),transparent_70%)] transition-opacity duration-1000"
-          style={{ opacity: 0.15 + (progress / 200) }}
-        ></div>
-        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,rgba(34,211,238,0.1),transparent_60%)]"></div>
-      </div>
+      {/* Main Interaction Area */}
+      <div className="z-10 w-full max-w-md px-4 flex flex-col items-center gap-8">
 
-      <div className="z-10 flex flex-col items-center text-center px-6 max-w-xl mx-auto space-y-8 w-full">
+        {/* Onboarding / Stone View */}
+        {!isInitialized ? (
+          <div className="text-center space-y-6">
+            <p className="text-zinc-500 text-sm font-light tracking-widest uppercase">
+              A vessel awaits your essence
+            </p>
+            <button
+              onClick={() => setShowIncantation(true)}
+              className="group relative px-8 py-4 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden hover:border-purple-500/50 transition-all duration-500"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <span className="relative text-zinc-300 font-light tracking-[0.2em] group-hover:text-purple-300 transition-colors uppercase text-xs flex items-center gap-2">
+                <Sparkles className="w-4 h-4" />
+                Begin Resonance
+              </span>
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-1000">
+            {/* The Stone (Clickable) */}
+            <div onClick={() => setShowReading(true)} className="cursor-pointer">
+              <MagicStone
+                progress={progress}
+                isAbsorbing={isAbsorbing}
+                soulData={soulData}
+              />
+            </div>
 
-        {/* Title Section */}
-        <div className="space-y-2">
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-white via-gray-200 to-gray-500 drop-shadow-2xl">
-            MAGIC STONE
-          </h1>
-          <p className="text-gray-400 text-sm md:text-base tracking-widest uppercase">
-            {isInitialized ? "Soul Connected" : "Waiting for Soul..."}
-          </p>
-        </div>
+            {/* Action Buttons */}
+            <div className="flex gap-4 mt-8">
+              {/* Reset Button */}
+              <button
+                onClick={() => {
+                  localStorage.removeItem('magic_stone_logs');
+                  window.location.reload();
+                }}
+                className="p-3 rounded-full bg-zinc-900/50 text-zinc-600 hover:text-red-400 hover:bg-red-900/10 transition-all border border-zinc-800"
+                title="Shatter Stone (Reset)"
+              >
+                <RefreshCw className="w-4 h-4" />
+              </button>
 
-        {/* The Magic Stone Component */}
-        <div className="py-4 cursor-pointer" onClick={() => isInitialized && setShowModal(true)}>
-          <MagicStone isAbsorbing={isAbsorbing} progress={progress} soulData={reading} />
-        </div>
+              {/* Radar Button */}
+              <button
+                onClick={() => setShowRadar(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-cyan-400 hover:bg-cyan-900/10 transition-all border border-zinc-800 hover:border-cyan-800/50"
+              >
+                <Radio className="w-4 h-4" />
+                <span className="text-xs tracking-widest uppercase">Soul Radar</span>
+              </button>
+            </div>
 
-        {/* Input Area (Only show if initialized, for "Chat to Grow" feature) */}
-        {isInitialized && (
-          <SoulInput onSend={absorbSoul} isLoading={false} />
+            {/* Chat Input (Unlockable feature) */}
+            <div className="w-full mt-4">
+              <SoulInput onSend={absorbSoul} isLoading={isAbsorbing} />
+            </div>
+          </div>
         )}
 
-        {/* Footer */}
-        <footer className="absolute bottom-6 text-[10px] text-gray-600 tracking-wider">
-          © {new Date().getFullYear()} Magic Stone App. All souls reserved.
-        </footer>
       </div>
+
+      {/* Modals */}
+      {showIncantation && (
+        <IncantationModal
+          onInitialize={(data) => {
+            initializeSoul(data);
+            setShowIncantation(false);
+          }}
+        />
+      )}
+
+      {/* Profile Reading Modal */}
+      <AnimatePresence>
+        {showReading && soulData && (
+          <SoulReadingModal
+            isOpen={showReading}
+            onClose={() => setShowReading(false)}
+            data={soulData}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Soul Radar Overlay */}
+      {showRadar && soulData && (
+        <SoulRadar
+          userSoul={soulData}
+          onClose={() => setShowRadar(false)}
+        />
+      )}
+
     </main>
   );
 }

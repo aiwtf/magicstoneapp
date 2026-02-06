@@ -2,34 +2,43 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Link as LinkIcon, Sparkles, AlertCircle, Loader2 } from 'lucide-react';
-import { generateNonce, generateIncantation, SoulJSON } from '../utils/soulEngine';
-import { verifySharedLink } from '../actions';
+import { Copy, Sparkles, AlertCircle, ExternalLink, Zap } from 'lucide-react';
+import { generateNonce, generateIncantation, extractSoulJSON, SoulJSON } from '../utils/soulEngine';
 
 interface IncantationModalProps {
     onInitialize: (data: SoulJSON) => void;
 }
 
 export default function IncantationModal({ onInitialize }: IncantationModalProps) {
-    const [step, setStep] = useState<'copy' | 'paste'>('copy');
-    const [urlInput, setUrlInput] = useState('');
+    const [step, setStep] = useState<'copy' | 'await'>('copy');
     const [error, setError] = useState('');
     const [nonce, setNonce] = useState('');
     const [incantation, setIncantation] = useState('');
-    const [isVerifying, setIsVerifying] = useState(false);
+    const [isThinking, setIsThinking] = useState(false);
+    const [hasReturned, setHasReturned] = useState(false);
 
     useEffect(() => {
         const newNonce = generateNonce();
         setNonce(newNonce);
         setIncantation(generateIncantation(newNonce));
-    }, []);
+
+        // Auto-sense return logic
+        const handleFocus = () => {
+            // Only auto-sense if we are in the await phase
+            if (step === 'await') {
+                setHasReturned(true);
+            }
+        };
+
+        window.addEventListener('focus', handleFocus);
+        return () => window.removeEventListener('focus', handleFocus);
+    }, [step]); // step dependency important here
 
     const copyIncantation = () => {
         navigator.clipboard.writeText(incantation);
-        setStep('paste');
+        setStep('await');
     };
 
-    // The original handleVerifyLink is replaced by this new logic
     const handleMaterialize = async () => {
         setIsThinking(true);
         setError('');
@@ -40,18 +49,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
             // "Data Burn" Effect
             // Artificial delay to simulate processing/burning
             setTimeout(() => {
-                // Show toast or updated state here before closing?
-                // Ideally we'd have a toast system, but for now we'll update the button state to show success
-                // and then close.
                 onInitialize(data);
-                // The parent component or a global toast should ideally show "Source data incinerated".
-                // Since this component unmounts, we can rely on the parent or window alert (ugly)
-                // or just trust the transition.
-                // Let's add a small local success state if we want to show it *inside* the modal before it vanishes?
-                // Actually, the user asked for a Toast.
-                // Since I don't see a Toast library, I will just log it or rely on the UI transition implicitly,
-                // BUT the specific request was "Show a toast message: Source data incinerated".
-                // I'll add a temporary "Success" view in this modal before calling onInitialize.
             }, 800);
         } catch (e) {
             setIsThinking(false);
@@ -88,21 +86,6 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                     Copy the ancient words. They are the key.
                                 </p>
 
-                                <div className="bg-black/80 p-4 rounded-lg border border-zinc-800 font-mono text-[10px] text-zinc-500 relative group overflow-hidden max-h-32">
-                                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/90 pointer-events-none"></div>
-                                    <div className="opacity-50">
-                                        {incantation}
-                                    </div>
-                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/20 backdrop-blur-[1px]">
-                                        <Sparkles className="w-6 h-6 text-purple-500 animate-pulse" />
-                                    </div>
-                                </div>
-                                <p className="text-[10px] text-zinc-600 text-center">
-                                    1. Copy this Incantation. <br />
-                                    2. Paste it into ChatGPT or Gemini. <br />
-                                    3. Create a <b>Share Link</b> of that conversation.
-                                </p>
-
                                 <button
                                     onClick={copyIncantation}
                                     className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-bold uppercase tracking-widest rounded-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
@@ -121,7 +104,6 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                 key="step-portal"
                                 initial={{ opacity: 0, x: 20 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }} // Added exit animation for consistency
                                 className="space-y-4"
                             >
                                 <p className="text-sm text-zinc-400 text-center font-light">
@@ -154,7 +136,6 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                 {/* Materialize Button - Pulses when returned */}
                                 <button
                                     onClick={handleMaterialize}
-                                    disabled={isThinking || !hasReturned} // Disable if thinking or not returned
                                     className={`w-full py-5 font-bold uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2 relative overflow-hidden ${hasReturned
                                             ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_30px_rgba(147,51,234,0.5)] animate-pulse'
                                             : 'bg-zinc-800 text-zinc-500'
@@ -178,17 +159,19 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                     >
                                         <AlertCircle className="w-3 h-3" />
                                         {error}
-                                        <Sparkles className="w-4 h-4" />
-                                        Verify & Materialize
-                                    </>
+                                    </motion.p>
                                 )}
-                            </button>
+
+                                {!hasReturned && (
+                                    <p className="text-[10px] text-zinc-600 text-center animate-pulse">
+                                        Listening for your presence...
+                                    </p>
+                                )}
                             </motion.div>
                         )}
-                </AnimatePresence>
+                    </AnimatePresence>
+                </div>
             </div>
-
         </div>
-        </div >
     );
 }

@@ -134,10 +134,86 @@ export function validateSoulJSON(jsonString: string, expectedNonce: string): Sou
         throw new Error(`Soul Signature Mismatch. Expected code: ${expectedNonce}`);
     }
 
+    // ... existing validation logic ...
+
     // Schema Validation (Basic)
     if (!data.archetype || !data.soul_color || !data.dimensions) {
         throw new Error(" The Soul is fragmented. (Missing required fields)");
     }
 
     return data as SoulJSON;
+}
+
+// --- SOUL RADAR LSH LOGIC ---
+
+// A simple seeded random number generator (Linear Congruential Generator)
+// to ensure all clients generate the SAME "random" projection vectors.
+class SeededRNG {
+    private seed: number;
+    constructor(seed: number) { this.seed = seed; }
+    next(): number {
+        this.seed = (this.seed * 9301 + 49297) % 233280;
+        return this.seed / 233280;
+    }
+}
+
+// Generate 128 fixed 4D projection vectors once.
+// We use a fixed seed (e.g., 42) so every app instance has the same "Hyperplanes".
+const HASH_BITS = 128;
+const PROJECTION_VECTORS: SoulDimensions[] = (() => {
+    const rng = new SeededRNG(42);
+    const vectors: SoulDimensions[] = [];
+    for (let i = 0; i < HASH_BITS; i++) {
+        vectors.push({
+            chaos: rng.next() * 2 - 1,   // -1 to 1
+            logic: rng.next() * 2 - 1,
+            empathy: rng.next() * 2 - 1,
+            mysticism: rng.next() * 2 - 1
+        });
+    }
+    return vectors;
+})();
+
+/**
+ * Generates a 128-bit Locality Sensitive Hash (SimHash) from Soul Dimensions.
+ * Returns a string of 128 '0's and '1's.
+ */
+export function generateSoulHash(dims: SoulDimensions): string {
+    // Normalize dimensions to 0-1 range roughly, or just use raw if they carry weight.
+    // Our dimensions are 0-100.
+    // Vector V = [chaos, logic, empathy, mysticism]
+    // Hash bit i = 1 if (V dot H_i) >= 0, else 0
+
+    let hash = '';
+    for (const plane of PROJECTION_VECTORS) {
+        const dotProduct =
+            (dims.chaos * plane.chaos) +
+            (dims.logic * plane.logic) +
+            (dims.empathy * plane.empathy) +
+            (dims.mysticism * plane.mysticism);
+
+        hash += (dotProduct >= 0) ? '1' : '0';
+    }
+    return hash;
+}
+
+/**
+ * Calculates the Resonance Score (Similarity) between two Soul Hashes.
+ * Returns a percentage 0-100.
+ */
+export function calculateResonance(hash1: string, hash2: string): number {
+    if (hash1.length !== hash2.length) return 0;
+
+    let hammingDistance = 0;
+    for (let i = 0; i < hash1.length; i++) {
+        if (hash1[i] !== hash2[i]) {
+            hammingDistance++;
+        }
+    }
+
+    // Similarity = 1 - (Distance / MaxDistance)
+    const similarity = 1 - (hammingDistance / hash1.length);
+
+    // Scale to percentage integer
+    return Math.round(similarity * 100);
 }
