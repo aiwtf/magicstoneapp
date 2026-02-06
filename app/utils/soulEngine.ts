@@ -61,34 +61,77 @@ User History to Analyze:
 }
 
 /**
- * Validates and parses the Soul JSON string.
- * @param jsonString The raw string pasted by the user.
- * @param expectedNonce The nonce that was generated for this session.
- * @throws Error if JSON is invalid or nonce mismatches.
+ * Extracts SoulJSON from a larger text block (e.g. mixed response from AI).
+ * @param text The text to search in.
+ * @param expectedNonce The nonce to verify against.
  */
-export function validateSoulJSON(jsonString: string, expectedNonce: string): SoulJSON {
-    // 1. Clean the string (remove potential markdown wrappers)
-    const cleaned = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
-
-    // 2. Parse JSON
-    let data: any;
-    try {
-        // Try to find the JSON object if there's surrounding text
-        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-        const toParse = jsonMatch ? jsonMatch[0] : cleaned;
-        data = JSON.parse(toParse);
-    } catch (e) {
-        throw new Error("The text is not a valid soul artifact (Invalid JSON).");
+export function extractSoulJSON(text: string, expectedNonce: string): SoulJSON {
+    // 1. Try to find the nonce location
+    const nonceIndex = text.indexOf(expectedNonce);
+    if (nonceIndex === -1) {
+        throw new Error("No Soul Resonance found. (Verification Code missing)");
     }
 
-    // 3. Verify Nonce
+    // Try 1: Clean markdown code blocks
+    const codeBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/);
+    if (codeBlockMatch) {
+        try {
+            const data = JSON.parse(codeBlockMatch[1]);
+            if (data.verification_code === expectedNonce) return validateSoulJSON(JSON.stringify(data), expectedNonce);
+        } catch (e) { }
+    }
+
+    // Try 2: Clean and parse whole text
+    const cleanText = text.replace(/[“”]/g, '"').replace(/[‘’]/g, "'");
+    try {
+        const data = JSON.parse(cleanText);
+        if (data.verification_code === expectedNonce) return validateSoulJSON(JSON.stringify(data), expectedNonce);
+    } catch (e) { }
+
+    // Try 3: Heuristic extraction around the nonce
+    const openBrace = cleanText.lastIndexOf('{', nonceIndex);
+    if (openBrace !== -1) {
+        let balance = 1;
+        for (let i = openBrace + 1; i < cleanText.length; i++) {
+            if (cleanText[i] === '{') balance++;
+            if (cleanText[i] === '}') balance--;
+
+            if (balance === 0) {
+                const candidate = cleanText.substring(openBrace, i + 1);
+                try {
+                    return validateSoulJSON(candidate, expectedNonce);
+                } catch (e) { }
+                break;
+            }
+        }
+    }
+
+    // Fallback: validate what we can
+    throw new Error("Fragments found, but the Soul is incomplete.");
+}
+
+/**
+ * Validates and parses the Soul JSON string.
+ */
+export function validateSoulJSON(jsonString: string, expectedNonce: string): SoulJSON {
+    // Basic cleaning to handle potential Markdown code blocks if user copies too much
+    const cleanString = jsonString.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    let data;
+    try {
+        data = JSON.parse(cleanString);
+    } catch (e) {
+        throw new Error("The scroll is illegible. (Invalid JSON format)");
+    }
+
     if (data.verification_code !== expectedNonce) {
+        // Security check
         throw new Error(`Soul Signature Mismatch. Expected code: ${expectedNonce}`);
     }
 
-    // 4. Validate Schema (Basic check)
+    // Schema Validation (Basic)
     if (!data.archetype || !data.soul_color || !data.dimensions) {
-        throw new Error("The soul data is incomplete.");
+        throw new Error(" The Soul is fragmented. (Missing required fields)");
     }
 
     return data as SoulJSON;
