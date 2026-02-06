@@ -52,10 +52,24 @@ export function useSoulEngine() {
         }, 2000); // Animation duration matches the stone's reaction time
     };
 
+    const initializeSoul = (data: { soul_color: string; keywords: string[]; summary: string }) => {
+        setProgress(100);
+        // We might want to store the "soul reading" separately, or put it in logs?
+        // For now, let's assume the component handling this will also set the 'reading' state in the parent,
+        // but we should store the fact that we are "awakened" in local storage.
+        // Let's modify the data structure slightly or just use progress=100 as the flag.
+
+        // Actually, to make it robust, let's emit the event or just rely on state.
+        // We will save a special log entry to mark initialization.
+        const initLog = `SOUL_INIT_JSON::${JSON.stringify(data)}`;
+        setLogs((prev) => [...prev, initLog]);
+    };
+
     return {
         progress,
         logs,
         isAbsorbing,
-        absorbSoul
+        absorbSoul,
+        initializeSoul
     };
 }

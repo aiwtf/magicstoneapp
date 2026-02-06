@@ -3,6 +3,7 @@
 import MagicStone from "./components/MagicStone";
 import SoulInput from "./components/SoulInput";
 import SoulReadingModal from "./components/SoulReadingModal";
+import IncantationModal from "./components/IncantationModal";
 import { useSoulEngine } from "./hooks/useSoulEngine";
 import { Download, Info, Heart, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -11,40 +12,47 @@ import { useState } from "react";
 import { analyzeSoul } from "./actions";
 
 export default function Home() {
-  const { progress, logs, isAbsorbing, absorbSoul } = useSoulEngine();
+  const { progress, logs, isAbsorbing, absorbSoul, initializeSoul } = useSoulEngine();
   const [reading, setReading] = useState<any>(null);
   const [isAwakening, setIsAwakening] = useState(false);
   const [showModal, setShowModal] = useState(false);
 
-  const handleAwaken = async () => {
-    if (processing) return;
-    setIsAwakening(true);
+  // Check if soul is already awakened (initialized)
+  // We can assume if progress is 100, we are awakened.
+  // Or check if we have the specific initialization log.
+  const isInitialized = progress >= 100;
 
-    try {
-      console.log("Awakening started...");
-      const data = await analyzeSoul(logs);
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
-      setReading(data);
-      setShowModal(true);
-    } catch (e) {
-      console.error(e);
-      alert(e instanceof Error ? e.message : "The connection is weak.");
-    } finally {
-      setIsAwakening(false);
+  // Derive reading data from logs if available (persistence)
+  // This is a quick hack to restore the reading if we just reloaded page after initialization
+  if (!reading && isInitialized) {
+    const initLog = logs.find(l => l.startsWith("SOUL_INIT_JSON::"));
+    if (initLog) {
+      try {
+        const json = JSON.parse(initLog.replace("SOUL_INIT_JSON::", ""));
+        setReading(json);
+      } catch (e) { }
     }
+  }
+
+  const handleInitialization = (data: any) => {
+    initializeSoul(data);
+    setReading(data);
+    // Optional: Show value or just transition UI
   };
 
-  // Prevent multiple clicks
-  const processing = isAbsorbing || isAwakening;
+  const handleOpenReading = () => {
+    setShowModal(true);
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center relative overflow-hidden bg-black selection:bg-purple-900 selection:text-white">
 
-      {/* Soul Reading Modal */}
+      {/* Soul Extraction Onboarding */}
+      {!isInitialized && (
+        <IncantationModal onInitialize={handleInitialization} />
+      )}
+
+      {/* Soul Reading Modal (Profile view) */}
       <AnimatePresence>
         {showModal && <SoulReadingModal isOpen={showModal} onClose={() => setShowModal(false)} data={reading} />}
       </AnimatePresence>
@@ -66,45 +74,19 @@ export default function Home() {
             MAGIC STONE
           </h1>
           <p className="text-gray-400 text-sm md:text-base tracking-widest uppercase">
-            Start your soulmate journey
+            {isInitialized ? "Soul Connected" : "Waiting for Soul..."}
           </p>
         </div>
 
         {/* The Magic Stone Component */}
-        <div className="py-4">
+        <div className="py-4 cursor-pointer" onClick={() => isInitialized && setShowModal(true)}>
           <MagicStone isAbsorbing={isAbsorbing} progress={progress} />
         </div>
 
-        {/* Input Area */}
-        <SoulInput onSend={absorbSoul} isLoading={processing} />
-
-        {/* Actions Zone: Status or Awakening */}
-        <div className="min-h-[40px] flex items-center justify-center">
-          {progress > 10 ? (
-            <button
-              onClick={handleAwaken}
-              disabled={processing}
-              className="group flex items-center gap-2 px-6 py-2 rounded-full bg-white/10 hover:bg-magic-purple/20 border border-magic-purple/50 text-magic-purple hover:text-white transition-all duration-500 disabled:opacity-50"
-            >
-              <Sparkles className={`w-4 h-4 ${isAwakening ? "animate-spin" : ""}`} />
-              <span className="text-xs font-bold tracking-widest uppercase">
-                {isAwakening ? "Reading Soul..." : "Awaken Stone"}
-              </span>
-            </button>
-          ) : (
-            <p className="h-4 text-[10px] text-gray-700 font-mono tracking-tighter">
-              {progress > 0 ? `SYNC: ${progress.toFixed(0)}%` : ""}
-            </p>
-          )}
-        </div>
-
-        {/* Download Buttons - Moved to bottom, smaller */}
-        <div className="flex gap-4 opacity-50 hover:opacity-100 transition-opacity duration-500 mt-8 scale-90">
-          {/* Simpler placeholder buttons for now to keep focus on the interaction */}
-          <div className="text-[10px] text-gray-600 uppercase tracking-widest">
-            Available on iOS & Android
-          </div>
-        </div>
+        {/* Input Area (Only show if initialized, for "Chat to Grow" feature) */}
+        {isInitialized && (
+          <SoulInput onSend={absorbSoul} isLoading={false} />
+        )}
 
         {/* Footer */}
         <footer className="absolute bottom-6 text-[10px] text-gray-600 tracking-wider">
