@@ -1,36 +1,44 @@
 'use client';
 
 import { useState, useEffect } from "react";
+import { Canvas } from "@react-three/fiber";
 import SoulInput from "./components/SoulInput";
 import MagicStone from "./components/MagicStone";
-import IncantationModal from "./components/IncantationModal";
+// import IncantationModal from "./components/IncantationModal"; // Legacy
+import RitualAltar from "./components/RitualAltar"; // New
 import SoulRadar from "./components/SoulRadar";
 import SoulReadingModal from "./components/SoulReadingModal";
+import MintingModal from "./components/MintingModal"; // New
 import { useSoulEngine } from "./hooks/useSoulEngine";
-import { Sparkles, RefreshCw, Radio } from "lucide-react";
+import { Sparkles, RefreshCw, Radio, Gem } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { useLanguage } from "./contexts/LanguageContext";
+import LanguageSelector from "./components/LanguageSelector";
 
 export default function Home() {
-  const { progress, logs, isAbsorbing, absorbSoul, initializeSoul } = useSoulEngine();
+  const { t } = useLanguage();
+  const { progress, isAbsorbing, absorbSoul, injectFragment, soulData } = useSoulEngine();
 
-  // Reconstruct soul data from logs if available
-  const soulLog = logs.find(l => l.startsWith("SOUL_INIT_JSON::"));
-  const soulData = soulLog ? JSON.parse(soulLog.replace("SOUL_INIT_JSON::", "")) : null;
+  // soulData is now the composite directly from the hook
   const isInitialized = !!soulData;
+  const canMint = (soulData?.density || 0) >= 0.8;
 
-  const [showIncantation, setShowIncantation] = useState(false);
+  const [showAltar, setShowAltar] = useState(false); // Renamed from showIncantation
   const [showRadar, setShowRadar] = useState(false);
   const [showReading, setShowReading] = useState(false);
+  const [showMinting, setShowMinting] = useState(false);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-black selection:bg-purple-900/30 relative overflow-hidden">
+
+      <LanguageSelector />
 
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black pointer-events-none" />
 
       {/* Title */}
       <h1 className="z-10 text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400/50 mb-8 tracking-tighter opacity-80">
-        MAGIC STONE
+        {t('app.title')}
       </h1>
 
       {/* Main Interaction Area */}
@@ -40,40 +48,58 @@ export default function Home() {
         {!isInitialized ? (
           <div className="text-center space-y-6">
             <p className="text-zinc-500 text-sm font-light tracking-widest uppercase">
-              A vessel awaits your essence
+              {t('app.subtitle')}
             </p>
             <button
-              onClick={() => setShowIncantation(true)}
+              onClick={() => setShowAltar(true)}
               className="group relative px-8 py-4 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden hover:border-purple-500/50 transition-all duration-500"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               <span className="relative text-zinc-300 font-light tracking-[0.2em] group-hover:text-purple-300 transition-colors uppercase text-xs flex items-center gap-2">
                 <Sparkles className="w-4 h-4" />
-                Begin Resonance
+                {t('btn.begin')}
               </span>
             </button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-1000">
             {/* The Stone (Clickable) */}
-            <div onClick={() => setShowReading(true)} className="cursor-pointer">
-              <MagicStone
-                progress={progress}
-                isAbsorbing={isAbsorbing}
-                soulData={soulData}
-              />
+            <div className="w-full h-[600px] relative">
+              <Canvas camera={{ position: [0, 0, 4], fov: 45 }}>
+                <ambientLight intensity={0.5} />
+                <pointLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
+                <spotLight position={[-10, -10, -10]} angle={0.15} penumbra={1} intensity={1} color={soulData?.soul_color || '#ffffff'} />
+
+                <MagicStone
+                  soul={soulData}
+                  onClick={() => setShowReading(true)}
+                />
+              </Canvas>
+
+              {/* Density Meter Overlay */}
+              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64">
+                <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                  <div
+                    className="h-full bg-purple-500 shadow-[0_0_10px_purple]"
+                    style={{ width: `${(soulData?.density || 0) * 100}%`, transition: 'width 1s ease-out' }}
+                  />
+                </div>
+                <p className="text-[10px] text-center text-zinc-500 mt-2 tracking-widest uppercase">
+                  Soul Density: {Math.round((soulData?.density || 0) * 100)}%
+                </p>
+              </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex gap-4 mt-8">
+            <div className="flex gap-4 mt-8 flex-wrap justify-center">
               {/* Reset Button */}
               <button
                 onClick={() => {
-                  localStorage.removeItem('magic_stone_logs');
+                  localStorage.removeItem('magic_stone_composite');
                   window.location.reload();
                 }}
                 className="p-3 rounded-full bg-zinc-900/50 text-zinc-600 hover:text-red-400 hover:bg-red-900/10 transition-all border border-zinc-800"
-                title="Shatter Stone (Reset)"
+                title={t('btn.reset')}
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
@@ -84,7 +110,30 @@ export default function Home() {
                 className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-cyan-400 hover:bg-cyan-900/10 transition-all border border-zinc-800 hover:border-cyan-800/50"
               >
                 <Radio className="w-4 h-4" />
-                <span className="text-xs tracking-widest uppercase">Soul Radar</span>
+                <span className="text-xs tracking-widest uppercase">{t('btn.radar')}</span>
+              </button>
+
+              {/* Inject More (Loop) */}
+              <button
+                onClick={() => setShowAltar(true)}
+                className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-purple-400 hover:bg-purple-900/10 transition-all border border-zinc-800 hover:border-purple-800/50"
+                title="Inject Soul Fragment"
+              >
+                <Sparkles className="w-4 h-4" />
+              </button>
+
+              {/* Mint Artifact Button (New) */}
+              <button
+                onClick={() => canMint && setShowMinting(true)}
+                disabled={!canMint}
+                className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all border ${canMint
+                  ? 'bg-yellow-900/20 border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-black cursor-pointer shadow-[0_0_15px_rgba(234,179,8,0.2)]'
+                  : 'bg-zinc-900/50 border-zinc-800 text-zinc-700 cursor-not-allowed'
+                  }`}
+                title={canMint ? "Mint Soulbound Artifact" : "Density must be > 80% to Mint"}
+              >
+                <Gem className="w-4 h-4" />
+                <span className="text-xs tracking-widest uppercase">Mint</span>
               </button>
             </div>
 
@@ -98,14 +147,17 @@ export default function Home() {
       </div>
 
       {/* Modals */}
-      {showIncantation && (
-        <IncantationModal
-          onInitialize={(data) => {
-            initializeSoul(data);
-            setShowIncantation(false);
-          }}
-        />
-      )}
+      <AnimatePresence>
+        {showAltar && (
+          <RitualAltar
+            onClose={() => setShowAltar(false)}
+            onInitialize={(fragment) => {
+              injectFragment(fragment); // Use new injector
+              setShowAltar(false);
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Profile Reading Modal */}
       <AnimatePresence>
@@ -125,6 +177,17 @@ export default function Home() {
           onClose={() => setShowRadar(false)}
         />
       )}
+
+      {/* Minting Modal */}
+      <AnimatePresence>
+        {showMinting && soulData && (
+          <MintingModal
+            isOpen={showMinting}
+            onClose={() => setShowMinting(false)}
+            data={soulData}
+          />
+        )}
+      </AnimatePresence>
 
     </main>
   );

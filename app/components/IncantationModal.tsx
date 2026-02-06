@@ -4,12 +4,14 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Copy, Sparkles, AlertCircle, ExternalLink, Zap } from 'lucide-react';
 import { generateNonce, generateIncantation, extractSoulJSON, SoulJSON } from '../utils/soulEngine';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface IncantationModalProps {
     onInitialize: (data: SoulJSON) => void;
 }
 
 export default function IncantationModal({ onInitialize }: IncantationModalProps) {
+    const { t } = useLanguage();
     const [step, setStep] = useState<'copy' | 'await'>('copy');
     const [error, setError] = useState('');
     const [nonce, setNonce] = useState('');
@@ -64,10 +66,10 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                 {/* Header */}
                 <div className="p-6 border-b border-zinc-800/50 text-center">
                     <h2 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-cyan-400 tracking-widest uppercase">
-                        Soul Extraction
+                        {t('modal.title')}
                     </h2>
                     <p className="text-[10px] text-zinc-500 mt-2 uppercase tracking-widest">
-                        {step === 'copy' ? 'Phase 1: The Incantation' : 'Phase 2: The Return'}
+                        {step === 'copy' ? t('modal.phase1') : t('modal.phase2')}
                     </p>
                 </div>
 
@@ -83,7 +85,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                 className="space-y-4"
                             >
                                 <p className="text-sm text-zinc-400 text-center font-light">
-                                    Copy the ancient words. They are the key.
+                                    {t('modal.desc.copy')}
                                 </p>
 
                                 <button
@@ -91,12 +93,12 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                     className="w-full py-4 bg-white hover:bg-zinc-200 text-black font-bold uppercase tracking-widest rounded-lg transition-all transform active:scale-95 flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.1)]"
                                 >
                                     <Copy className="w-4 h-4" />
-                                    Copy Incantation
+                                    {t('btn.copy')}
                                 </button>
 
                                 {/* Privacy Note */}
                                 <div className="mt-4 p-3 bg-zinc-900/80 rounded border border-zinc-800 text-[10px] text-zinc-500 leading-relaxed text-center">
-                                    <p>🔒 <b>Privacy First:</b> We don't read your chats. The AI distills your history into pure abstract numbers (Chaos, Logic) locally on your device. Your raw data never leaves your control.</p>
+                                    <p>{t('note.privacy')}</p>
                                 </div>
                             </motion.div>
                         ) : (
@@ -107,7 +109,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                 className="space-y-4"
                             >
                                 <p className="text-sm text-zinc-400 text-center font-light">
-                                    Enter the Portal. Speak to the Oracle. Return with the artifact.
+                                    {t('modal.desc.portal')}
                                 </p>
 
                                 <div className="grid grid-cols-2 gap-3">
@@ -118,7 +120,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                         className="flex flex-col items-center justify-center p-4 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-lg border border-zinc-700 hover:border-green-500/50 transition-all group"
                                     >
                                         <ExternalLink className="w-5 h-5 mb-2 text-green-400 group-hover:scale-110 transition-transform" />
-                                        <span className="text-xs font-bold text-zinc-300">Open ChatGPT</span>
+                                        <span className="text-xs font-bold text-zinc-300">{t('btn.open.chatgpt')}</span>
                                     </a>
                                     <a
                                         href="https://gemini.google.com/"
@@ -127,7 +129,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                         className="flex flex-col items-center justify-center p-4 bg-zinc-800/50 hover:bg-zinc-700/50 rounded-lg border border-zinc-700 hover:border-blue-500/50 transition-all group"
                                     >
                                         <ExternalLink className="w-5 h-5 mb-2 text-blue-400 group-hover:scale-110 transition-transform" />
-                                        <span className="text-xs font-bold text-zinc-300">Open Gemini</span>
+                                        <span className="text-xs font-bold text-zinc-300">{t('btn.open.gemini')}</span>
                                     </a>
                                 </div>
 
@@ -137,16 +139,16 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
                                 <button
                                     onClick={handleMaterialize}
                                     className={`w-full py-5 font-bold uppercase tracking-widest rounded-lg transition-all flex items-center justify-center gap-2 relative overflow-hidden ${hasReturned
-                                            ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_30px_rgba(147,51,234,0.5)] animate-pulse'
-                                            : 'bg-zinc-800 text-zinc-500'
+                                        ? 'bg-purple-600 hover:bg-purple-500 text-white shadow-[0_0_30px_rgba(147,51,234,0.5)] animate-pulse'
+                                        : 'bg-zinc-800 text-zinc-500'
                                         }`}
                                 >
                                     {isThinking ? (
-                                        <span className="animate-pulse">Divining...</span>
+                                        <span className="animate-pulse">{t('btn.divining')}</span>
                                     ) : (
                                         <>
                                             <Zap className={`w-4 h-4 ${hasReturned ? 'fill-current' : ''}`} />
-                                            {hasReturned ? "Materialize Stone" : "Waiting for Return..."}
+                                            {hasReturned ? t('btn.materialize') : t('btn.waiting')}
                                         </>
                                     )}
                                 </button>
@@ -164,7 +166,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
 
                                 {!hasReturned && (
                                     <p className="text-[10px] text-zinc-600 text-center animate-pulse">
-                                        Listening for your presence...
+                                        {t('btn.listening')}
                                     </p>
                                 )}
                             </motion.div>

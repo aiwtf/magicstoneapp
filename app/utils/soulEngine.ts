@@ -6,13 +6,19 @@ export interface SoulDimensions {
 }
 
 export interface SoulJSON {
-    verification_code: string;
+    verification_code?: string;
+    density_boost?: number;
     archetype: string;
-    dimensions: SoulDimensions;
-    visual_seed: string; // Used to seed the procedural generation
-    soul_color: string;
     keywords: string[];
-    summary: string;
+    summary?: string;
+    dimensions: {
+        chaos: number;
+        logic: number;
+        empathy: number;
+        mysticism: number;
+    };
+    visual_seed: string;
+    soul_color?: string;
 }
 
 /**

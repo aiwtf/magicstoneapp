@@ -1,132 +1,109 @@
 'use client';
 
-import { motion } from "framer-motion";
-import { useState, useMemo } from "react";
-import { SoulJSON } from "../utils/soulEngine";
+import { useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import { MeshDistortMaterial, Sphere, Float, Stars, Sparkles } from '@react-three/drei';
+import * as THREE from 'three';
+import { SoulComposite } from '../utils/soulAggregator';
 
-export default function MagicStone({ isAbsorbing = false, progress = 0, soulData }: { isAbsorbing?: boolean, progress?: number, soulData?: SoulJSON }) {
-    const [isHovered, setIsHovered] = useState(false);
+// We allow receiving either SoulComposite (preferred) or SoulJSON structure (legacy/compatible)
+// But for Phase 4 we mostly rely on the composite structure which has density.
+interface MagicStoneProps {
+    soul: SoulComposite | null;
+    onClick?: () => void;
+}
 
-    // Default values
-    const defaultColor = "#8B5CF6"; // magic-purple
-    const color = soulData?.soul_color || defaultColor;
+export default function MagicStone({ soul, onClick }: MagicStoneProps) {
+    const meshRef = useRef<THREE.Mesh>(null);
 
-    // Dimensions (0-100) or defaults
-    const chaos = soulData?.dimensions?.chaos || 20;
-    const logic = soulData?.dimensions?.logic || 50;
-    const mysticism = soulData?.dimensions?.mysticism || 50;
+    // 1. Default State (Empty / Void)
+    const defaultColor = "#4a4a4a";
 
-    // Derived Visual Parameters
+    // 2. Extract Soul Data
+    // Handle both possible structures if mixed, but prefer SoulComposite
+    const density = soul?.density || 0;
+    const chaos = soul?.dimensions?.chaos || 0;
+    const color = soul?.soul_color || defaultColor;
 
-    // 1. Shape Roughness (Chaos): Low Chaos = Circle (50%), High Chaos = Irregular
-    const borderRadius = useMemo(() => {
-        if (!soulData) return "50%";
-        // Create 8 points of variance based on chaos
-        const variance = () => 50 + (Math.random() * chaos - (chaos / 2));
-        return `${variance()}% ${variance()}% ${variance()}% ${variance()}% / ${variance()}% ${variance()}% ${variance()}% ${variance()}%`;
-    }, [soulData, chaos]);
+    // 3. Calculate Visual Parameters based on Density
+    // Lerp function helper
+    const lerp = (start: number, end: number, t: number) => start * (1 - t) + end * t;
 
-    // 2. Pulse Speed (Logic): High Logic = Slow/Steady (4s), Low Logic = Fast/Erratic (0.5s)
-    // Invert logic for duration: 100 logic -> 4s, 0 logic -> 0.5s
-    const pulseDuration = useMemo(() => {
-        if (!soulData) return 3;
-        return 0.5 + (logic / 100) * 3.5;
-    }, [logic]);
+    // Visual Logic:
+    // As density goes 0 -> 1:
+    // Roughness: 0.8 (Foggy) -> 0.1 (Shiny)
+    // Metalness: 0.0 (Plastic) -> 0.7 (Metal)
+    // Distortion: High (Unstable) -> Low (Stable) (Also affected by Chaos)
 
-    // 3. Glow Intensity (Mysticism): High Mysticism = Larger blur radius
-    const glowBlur = useMemo(() => {
-        return 20 + (mysticism / 100) * 60; // 20px to 80px
-    }, [mysticism]);
+    const roughness = lerp(0.8, 0.1, density);
+    const metalness = lerp(0.1, 0.7, density);
+    const transmission = lerp(1.0, 0.2, density); // Ghost -> Solid
 
+    // Chaos affects the "Speed" and "Distort" amount
+    // If Soul is Chaotic (chaos=100), it keeps moving even when solid.
+    // Note: Chaos 0-100 needs scaling
+    const chaosFactor = chaos / 100;
+    const distortAmount = lerp(0.6, 0.2, density) + (chaosFactor * 0.4);
+    const distortSpeed = lerp(2, 0.5, density) + (chaosFactor * 2.0);
 
-    // Calculate dynamic scale based on progress (0-100)
-    const growthScale = 1 + (progress / 200);
+    useFrame((state, delta) => {
+        if (meshRef.current) {
+            // Gentle rotation - faster if low density (unstable)
+            const rotationSpeed = 0.2 + (1 - density) * 0.5;
+            meshRef.current.rotation.y += delta * rotationSpeed;
+            meshRef.current.rotation.x += delta * (rotationSpeed * 0.5);
+        }
+    });
 
     return (
-        <div className="relative flex flex-col items-center justify-center p-10 cursor-pointer group"
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-        >
-            {/* Outer Glow - Dynamic Color & Blur */}
-            <motion.div
-                className="absolute w-64 h-64 rounded-full opacity-20 transition-all duration-1000"
-                style={{
-                    backgroundColor: color,
-                    filter: `blur(${glowBlur}px)`,
-                    opacity: 0.2 + (progress / 500)
-                }}
-                animate={{
-                    scale: isAbsorbing ? [1, 2, 1] : [1, 1.2, 1],
-                }}
-                transition={{
-                    duration: isAbsorbing ? 0.5 : pulseDuration,
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                    repeatType: "mirror"
-                }}
-            />
+        <group>
+            {/* Background Ambience */}
+            <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
 
-            {/* Cyan/Secondary Inner Glow - Complementary or default */}
-            <motion.div
-                className="absolute w-48 h-48 rounded-full blur-[40px] opacity-20 bg-magic-cyan/50 group-hover:opacity-50 transition-opacity duration-1000"
-                animate={{
-                    scale: isAbsorbing ? [1.1, 1.5, 1.1] : [1.1, 1, 1.1],
-                }}
-                transition={{
-                    duration: isAbsorbing ? 0.5 : pulseDuration * 0.8, // Slightly offset rhythm
-                    repeat: Infinity,
-                    ease: "easeInOut",
-                }}
-            />
-
-            {/* The Stone Itself */}
-            <motion.div
-                className="relative z-10 w-48 h-48 bg-gradient-to-br from-gray-800 via-black to-gray-900 shadow-[inset_0_0_20px_rgba(255,255,255,0.1)] border border-white/10"
-                style={{
-                    borderRadius: borderRadius, // DYNAMIC SHAPE
-                    boxShadow: `0 0 ${chaos / 2}px ${color}40`, // Chaos adds a jittery outer rim
-                }}
-                animate={{
-                    y: isAbsorbing ? [0, -20, 0] : [0, -10, 0],
-                    rotate: isAbsorbing ? [0, 180, 360] : [0, 5, -5, 0],
-                    scale: isAbsorbing ? [growthScale, growthScale * 1.1, growthScale] : growthScale,
-                }}
-                whileHover={{
-                    scale: growthScale * 1.05,
-                    rotate: 0,
-                }}
-                transition={{
-                    y: { duration: isAbsorbing ? 0.5 : 6, repeat: Infinity, ease: "easeInOut" },
-                    rotate: { duration: isAbsorbing ? 1 : 20, repeat: Infinity, ease: isAbsorbing ? "easeInOut" : "linear" },
-                    scale: { duration: 0.5 },
-                }}
+            {/* Floating Animation wrapper */}
+            <Float
+                speed={2} // Animation speed
+                rotationIntensity={1} // XYZ rotation intensity
+                floatIntensity={2} // Up/down float intensity
             >
-                {/* Stone Texture / internal reflection */}
-                <div
-                    className="absolute inset-0 opacity-50 bg-[radial-gradient(circle_at_30%_30%,rgba(255,255,255,0.1),transparent_60%)]"
-                    style={{ borderRadius: borderRadius }}
-                ></div>
-
-                {/* Pulsing Core - Driven by Soul Color */}
-                <motion.div
-                    className="absolute top-1/2 left-1/2 w-8 h-8 -translate-x-1/2 -translate-y-1/2 rounded-full blur-md"
-                    style={{ backgroundColor: color }}
-                    animate={{
-                        opacity: isAbsorbing ? [0.2, 1, 0.2] : [0.2 + (progress / 200), 0.8 + (progress / 200), 0.2 + (progress / 200)],
-                        scale: isAbsorbing ? [1, 3, 1] : [1, 1.5, 1]
+                <Sphere
+                    ref={meshRef}
+                    args={[1, 64, 64]}
+                    scale={1.5}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (onClick) onClick();
                     }}
-                    transition={{ duration: isAbsorbing ? 0.5 : pulseDuration, repeat: Infinity, ease: "easeInOut" }}
-                />
-            </motion.div>
+                    onPointerOver={() => document.body.style.cursor = 'pointer'}
+                    onPointerOut={() => document.body.style.cursor = 'auto'}
+                >
+                    {/* The Soul Material */}
+                    <MeshDistortMaterial
+                        color={color}
+                        envMapIntensity={1}
+                        clearcoat={1}
+                        clearcoatRoughness={0.1}
+                        metalness={metalness}
+                        roughness={roughness}
+                        transmission={transmission} // Glass-like transmission
+                        thickness={2} // Refraction thickness
+                        distort={distortAmount} // Wobble amount
+                        speed={distortSpeed} // Wobble speed
+                    />
+                </Sphere>
+            </Float>
 
-            {/* Text hint */}
-            <motion.p
-                className="mt-12 text-gray-400 text-sm tracking-[0.2em] uppercase opacity-60 group-hover:opacity-100 group-hover:text-magic-cyan transition-all duration-500"
-                animate={{ opacity: isAbsorbing ? 0 : [0.4, 0.7, 0.4] }}
-                transition={{ duration: 3, repeat: Infinity }}
-            >
-                {isAbsorbing ? "ABSORBING..." : (soulData ? soulData.archetype : "Touch the Stone")}
-            </motion.p>
-        </div>
+            {/* Particle Effects (Only appear when density > 0) */}
+            {density > 0 && (
+                <Sparkles
+                    count={50 * (density * 10)}
+                    scale={4}
+                    size={2}
+                    speed={0.4}
+                    opacity={0.5}
+                    color={color}
+                />
+            )}
+        </group>
     );
 }
