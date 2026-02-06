@@ -62,7 +62,7 @@ export async function analyzeSoul(logs: string[]): Promise<SoulAnalysisResult> {
             soul_color: "#000000",
             keywords: ["Clouded", "Silent", "Mystery"],
             summary: "The spirits are having trouble connecting. It might be a momentary lapse in the ether.",
-            error: error instanceof Error ? error.message : "The spirits are clouded. Please try again later."
+            error: (error instanceof Error ? error.message : "The spirits are clouded.") + ` (Key used: ${apiKey ? apiKey.substring(0, 5) + '...' : 'undefined'})`
         };
     }
 }
