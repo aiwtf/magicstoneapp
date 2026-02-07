@@ -53,12 +53,10 @@ export interface SoulComposite {
 
 // 3. Density Curve Logic
 function calculateDensity(count: number): number {
-    if (count === 0) return 0;
+    if (count <= 0) return 0;
     if (count === 1) return 0.59;
-    const base = 0.59;
-    const boost = 0.25;
-    const val = base + ((count - 1) * boost);
-    return Math.min(1.0, val);
+    if (count === 2) return 0.79;
+    return 0.95; // Base cap for 3+ fragments
 }
 
 // 4. The Main Merge Function

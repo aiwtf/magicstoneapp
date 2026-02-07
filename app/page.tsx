@@ -55,10 +55,15 @@ export default function Home() {
               className="group relative px-8 py-4 bg-zinc-900 border border-zinc-800 rounded-full overflow-hidden hover:border-purple-500/50 transition-all duration-500"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              <span className="relative text-zinc-300 font-light tracking-[0.2em] group-hover:text-purple-300 transition-colors uppercase text-xs flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
-                {t('btn.begin')}
-              </span>
+              <div className="relative flex flex-col items-center gap-1 z-10">
+                <div className="flex items-center gap-2 text-zinc-300 font-light tracking-[0.2em] group-hover:text-purple-300 transition-colors uppercase text-xs">
+                  <Sparkles className="w-4 h-4" />
+                  {t('btn.begin')}
+                </div>
+                <span className="text-[10px] text-zinc-600 tracking-widest uppercase group-hover:text-purple-400/70 transition-colors">
+                  {t('btn.begin_sub')}
+                </span>
+              </div>
             </button>
           </div>
         ) : (

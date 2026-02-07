@@ -7,7 +7,8 @@ interface TranslationDocs {
 const en_base = {
     "app.title": "MAGIC STONE",
     "app.subtitle": "A vessel awaits your essence",
-    "btn.begin": "Begin Alchemy",
+    "btn.begin": "Initiate Ritual",
+    "btn.begin_sub": "Click to Copy Spell",
     "btn.reset": "Shatter Stone",
     "btn.radar": "Soul Radar",
     "modal.title": "Soul Extraction",
@@ -15,6 +16,9 @@ const en_base = {
     "modal.phase2": "Phase 2: The Return",
     "modal.desc.copy": "Copy the ancient words. They are the key.",
     "modal.desc.portal": "Enter the Portal. Speak to the Oracle. Return with the artifact.",
+    "modal.step1": "The Incantation has been copied to your clipboard.",
+    "modal.step2": "Go to the App, Paste, and Send.",
+    "modal.step3": "Copy the ENTIRE Response (Text + JSON) and return here.",
     "btn.copy": "Copy Incantation",
     "note.privacy": "🔒 Privacy First: We don't read your chats. The AI distills your history into pure abstract numbers locally.",
     "btn.open.chatgpt": "Open ChatGPT",
@@ -31,11 +35,21 @@ const en_base = {
 
 export const translations: Record<Language, TranslationDocs> = {
     en: en_base,
-    "zh-CN": { ...en_base, "app.title": "灵魂贤者之石", "app.subtitle": "容器已备，静候灵魂注入" }, // Simplified placeholder
+    "zh-CN": {
+        ...en_base,
+        "app.title": "MAGIC STONE", // Hardcoded
+        "app.subtitle": "容器已备，静候灵魂注入",
+        "btn.begin": "启动炼金仪式",
+        "btn.begin_sub": "点击复制咒语",
+        "modal.step1": "咒语已复制到剪贴板",
+        "modal.step2": "前往 App，粘贴并发送",
+        "modal.step3": "复制「完整回复」(文字+JSON) 并返回此处"
+    },
     "zh-TW": {
-        "app.title": "靈魂賢者之石",
+        "app.title": "MAGIC STONE", // Hardcoded
         "app.subtitle": "容器已備，靜候靈魂注入",
-        "btn.begin": "啟動鍊金儀式",
+        "btn.begin": "啟動煉金儀式",
+        "btn.begin_sub": "點擊複製咒語",
         "btn.reset": "粉碎賢者之石",
         "btn.radar": "靈魂雷達",
         "modal.title": "靈魂萃取",
@@ -43,6 +57,9 @@ export const translations: Record<Language, TranslationDocs> = {
         "modal.phase2": "第二階段：回歸",
         "modal.desc.copy": "複製古老的咒語，這是通往真理的鑰匙。",
         "modal.desc.portal": "進入傳送門，向神諭者對話，帶著聖物歸來。",
+        "modal.step1": "咒語已複製到剪貼簿",
+        "modal.step2": "前往 App，貼上並發送",
+        "modal.step3": "複製「完整回覆」(文字+JSON) 並返回此處",
         "btn.copy": "複製咒語",
         "note.privacy": "🔒 隱私優先：我們不會讀取您的對話。AI 僅會在本地將您的歷史提取為抽象的數值。",
         "btn.open.chatgpt": "開啟 ChatGPT",
@@ -57,7 +74,8 @@ export const translations: Record<Language, TranslationDocs> = {
         "toast.copied": "咒語已複製。請開啟神諭並貼上。",
     },
     ko: {
-        "app.title": "마법의 돌",
+        ...en_base, // Inherit English for missing keys
+        "app.title": "MAGIC STONE",
         "app.subtitle": "그릇이 준비되었습니다. 영혼을 불어넣으세요.",
         "btn.begin": "연금술 시작",
         "btn.reset": "돌 부수기",
@@ -82,7 +100,8 @@ export const translations: Record<Language, TranslationDocs> = {
     },
     pl: en_base,
     ja: {
-        "app.title": "賢者の石",
+        ...en_base, // Inherit English for missing keys
+        "app.title": "MAGIC STONE",
         "app.subtitle": "器は整った。魂を注ぎたまえ。",
         "btn.begin": "錬金術を始める",
         "btn.reset": "石を砕く",

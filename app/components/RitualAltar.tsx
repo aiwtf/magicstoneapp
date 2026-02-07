@@ -199,15 +199,15 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             <div className="space-y-4 text-zinc-300 text-sm">
                                 <div className="flex items-start gap-3">
                                     <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">1</div>
-                                    <p>The <span className="text-purple-400 font-bold">Incantation</span> has been copied to your clipboard.</p>
+                                    <p className="whitespace-pre-wrap">{t('modal.step1')}</p>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">2</div>
-                                    <p>Go to the App, <span className="text-white font-bold">Paste</span>, and Send.</p>
+                                    <p className="whitespace-pre-wrap">{t('modal.step2')}</p>
                                 </div>
                                 <div className="flex items-start gap-3">
                                     <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">3</div>
-                                    <p>Copy the <span className="text-white font-bold">ENTIRE Response</span> (Text + JSON) and return here.</p>
+                                    <p className="whitespace-pre-wrap">{t('modal.step3')}</p>
                                 </div>
                             </div>
 
