@@ -9,8 +9,10 @@ import RitualAltar from "./components/RitualAltar"; // New
 import SoulRadar from "./components/SoulRadar";
 import SoulReadingModal from "./components/SoulReadingModal";
 import MintingModal from "./components/MintingModal"; // New
+import SoulCompass from "./components/SoulCompass"; // New
+import { broadcastSignal, compressSoulVector } from "./utils/signalRelay"; // New
 import { useSoulEngine } from "./hooks/useSoulEngine";
-import { Sparkles, RefreshCw, Radio, Gem } from "lucide-react";
+import { Sparkles, RefreshCw, Radio, Gem, Compass } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
@@ -27,6 +29,26 @@ export default function Home() {
   const [showRadar, setShowRadar] = useState(false);
   const [showReading, setShowReading] = useState(false);
   const [showMinting, setShowMinting] = useState(false);
+  const [showCompass, setShowCompass] = useState(false); // New
+
+  const handleOpenCompass = async () => {
+    if (!soulData) return;
+    setShowCompass(true);
+    try {
+      // Dynamic geo import
+      const { getCurrentLocation } = await import("./utils/geoEngine");
+      const { geohash } = await getCurrentLocation();
+
+      await broadcastSignal({
+        id: crypto.randomUUID(),
+        geohash: geohash,
+        soul_vector: compressSoulVector(soulData),
+        timestamp: Date.now()
+      });
+    } catch (e) {
+      console.error("Compass Broadcast Error", e);
+    }
+  };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-black selection:bg-purple-900/30 relative overflow-hidden">
@@ -37,9 +59,12 @@ export default function Home() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black pointer-events-none" />
 
       {/* Title */}
-      <h1 className="z-10 text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400/50 mb-8 tracking-tighter opacity-80">
+      <h1 className="z-10 text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400/50 mb-2 tracking-tighter opacity-80">
         {t('app.title')}
       </h1>
+      <p className="z-10 text-[9px] text-zinc-600 mb-8 uppercase tracking-[0.3em]">
+        v0.9.1 (Geo-Beta)
+      </p>
 
       {/* Main Interaction Area */}
       <div className="z-10 w-full max-w-md px-4 flex flex-col items-center gap-8">
@@ -125,13 +150,13 @@ export default function Home() {
                 <RefreshCw className="w-4 h-4" />
               </button>
 
-              {/* Radar Button */}
+              {/* Compass Button */}
               <button
-                onClick={() => setShowRadar(true)}
+                onClick={handleOpenCompass}
                 className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-cyan-400 hover:bg-cyan-900/10 transition-all border border-zinc-800 hover:border-cyan-800/50"
               >
-                <Radio className="w-4 h-4" />
-                <span className="text-xs tracking-widest uppercase">{t('btn.radar')}</span>
+                <Compass className="w-4 h-4" />
+                <span className="text-xs tracking-widest uppercase">Compass</span>
               </button>
 
               {/* Inject More (Loop) */}
@@ -214,6 +239,16 @@ export default function Home() {
           onClose={() => setShowRadar(false)}
         />
       )}
+
+      {/* Soul Compass */}
+      <AnimatePresence>
+        {showCompass && soulData && (
+          <SoulCompass
+            userSoul={soulData}
+            onClose={() => setShowCompass(false)}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Minting Modal */}
       <AnimatePresence>
