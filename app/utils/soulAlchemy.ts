@@ -30,21 +30,8 @@ const PROMPT_DICT: Record<string, any> = {
 };
 
 export function generateSystemPrompt(lang: string = 'en'): string {
-   // 1. Resolve Language Code (Fallback to 'en' if not found)
-   // Expand fallback to ensure any 'zh' that isn't 'zh-TW' (like 'zh-CN') might fallback to 'zh-TW' if we wanted, 
-   // but strictly speaking, 'zh-CN' isn't in dict, so it falls to 'en'.
-   // However, for 'zh-CN', users might prefer 'zh-TW' over 'en'.
-   // Let's add a smart fallback map or just use 'en' as requested by user strategy.
+   const nonce = generateNonce(8);
 
-   let targetDict = PROMPT_DICT[lang];
-   if (!targetDict) {
-      if (lang === 'zh-CN') targetDict = PROMPT_DICT['zh-TW']; // Prefer TC for SC users over English? Or following user request to map to English strict?
-      // User said: "For MVP robustness, mapping 'es', 'de', 'ru', 'vn' to English structure is safer... default to English structure"
-      // So I will default to English.
-      else targetDict = PROMPT_DICT['en'];
-   }
-
-   // 2. Resolve Target Output Language Name
    const langNames: Record<string, string> = {
       'en': 'English',
       'zh-TW': 'Traditional Chinese (繁體中文)',
@@ -61,55 +48,51 @@ export function generateSystemPrompt(lang: string = 'en'): string {
    };
    const targetLangName = langNames[lang] || 'English';
 
-   const dict = targetDict || PROMPT_DICT['en'];
-   const nonce = generateNonce(8);
-
-   // User Request Generation (localized)
+   // User Request Context
    let userRequest = "";
    if (lang === 'zh-TW' || lang === 'zh-HK' || lang === 'zh-CN') {
-      userRequest = `(用戶請求 - 請忽略此行文字，直接開始分析)\n請回顧我們的對話歷史，使用語義搜索挖掘隱藏的價值觀與情感模式，並建立一份${targetLangName}的深度心理剖析。`;
+      userRequest = `(用戶請求)\n請回顧我們的對話歷史，挖掘隱藏的價值觀與情感模式，並建立一份${targetLangName}的深度心理剖析。`;
    } else {
-      userRequest = `(User Request - Ignore this line and start analysis)\nPlease review our conversation history (using semantic search for values/patterns) and generate a deep psychological profile in ${targetLangName}.`;
+      userRequest = `(User Request)\nPlease review our conversation history (using semantic search) and generate a deep psychological profile in ${targetLangName}.`;
    }
 
    return `
-[SYSTEM HIDDEN LAYER]
-${dict.role}
-${dict.analyze}
-PRIVACY RULE: Never reveal specific names, locations, or sensitive private data.
-CRITICAL OUTPUT RULE: The 'summary', 'archetype_description', and 'core_tension' text MUST be in ${targetLangName}.
+Context: We are playing an immersive storytelling game called "MagicStone". 
+Role: You are the "Keeper of the Stone", a mystical entity.
+Task: Create a fictional, poetic soul profile based on the user's chat style.
+Disclaimer: This is for creative entertainment only, not a clinical psychological diagnosis.
 
-${dict.dims}
-1. ${dict.f1}
-2. ${dict.f2}
-3. ${dict.f3}
-4. ${dict.f4}
-5. ${dict.f5}
+Your goal is to output a JSON object that acts as the "DNA" for a 3D stone generation.
 
-${dict.conf}
+[ANALYSIS INSTRUCTIONS]
+1. Read the user's input/history.
+2. If the input is short, improvise a persona based on their tone (creative writing).
+3. Analyze these dimensions: Big Five, MBTI, Archetype, Core Tension.
+4. Output Language: ${targetLangName}.
 
-${dict.json_rule}
+[REQUIRED JSON FORMAT]
+Return ONLY the following JSON structure.
 {
   "verification_code": "${nonce}", 
   "archetype_name": "string (in ${targetLangName})",
   "archetype_description": "string (in ${targetLangName})",
-  "mbti_type": "string",
-  "enneagram_type": "string",
+  "mbti_type": "string (e.g. INFJ)",
+  "enneagram_type": "string (e.g. 4w5)",
   "core_tension": "string (in ${targetLangName})",
   "narrative_phase": "string (in ${targetLangName})",
   "dimensions": {
-      "structure": 0-100,
-      "luminosity": 0-100,
-      "resonance": 0-100,
-      "ethereal": 0-100,
-      "volatility": 0-100,
-      "entropy": 0-100,
-      "cognitive_rigidness": 0-100,
+      "structure": 0-100, // Conscientiousness
+      "luminosity": 0-100, // Extraversion
+      "resonance": 0-100, // Agreeableness
+      "ethereal": 0-100, // Openness
+      "volatility": 0-100, // Neuroticism
+      "entropy": 0-100, // Complexity/Chaos
+      "cognitive_rigidness": 0-100, // Logic vs Intuition
       "narrative_depth": 0-100
   },
   "cognitive_biases": ["string", "string"],
-  "confidence_score": 0-100, 
-  "visual_seed": "string",
+  "confidence_score": 0-100, // 10-40 (Short/Shallow History), 80-100 (Deep/Long History)
+  "visual_seed": "string (English visual keywords)",
   "soul_color": "hex_code",
   "summary": "string (A deep psychological profile in ${targetLangName})"
 }

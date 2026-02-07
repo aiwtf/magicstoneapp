@@ -7,10 +7,20 @@ interface ArtifactCardProps {
 }
 
 export default function ArtifactCard({ data }: ArtifactCardProps) {
-    const rarity = data.density >= 0.95 ? 'LEGENDARY' : 'EPIC';
+    const isLegendary = data.density >= 0.8;
     // Use first fragment ID or random fallback if somehow empty
     const soulId = data.fragments && data.fragments[0] ? data.fragments[0].id : 'genesis';
     const shareUrl = `https://magicstone.app/soul/${soulId}`;
+
+    // Dynamic Style for the Stone Representation
+    const stoneStyle = {
+        background: isLegendary
+            ? `radial-gradient(circle at 35% 35%, rgba(255,255,255,0.8) 0%, ${data.soul_color} 40%, #000 100%)` // Shiny Gem
+            : `radial-gradient(circle at 30% 30%, ${data.soul_color}, #1a1a1a)`, // Dull Stone
+        boxShadow: isLegendary
+            ? `0 0 30px ${data.soul_color}80, inset 0 0 20px rgba(255,255,255,0.5)` // Glowing Aura
+            : 'none'
+    };
 
     return (
         <div className="relative w-80 h-[480px] bg-black border border-zinc-800 rounded-xl overflow-hidden shadow-2xl flex flex-col items-center p-6 text-center select-none group">
@@ -31,11 +41,7 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
                     )}
                 </div>
 
-                {/* Badges (MBTI / Enneagram) - Absolute or Centered? User asked for Top Right, but Centered is cleaner for card. 
-                    I'll keep them centered for symmetry as "Top Right" might crowd the header. 
-                    Or I'll position them absolute in the card container.
-                    Let's put them in the header row for now.
-                */}
+                {/* Badges (MBTI / Enneagram) */}
                 <div className="flex justify-center gap-2 mt-2">
                     {data.mbti_type && (
                         <span className="text-[9px] font-mono border border-zinc-700 bg-zinc-900/50 px-2 py-1 rounded-full text-cyan-400 shadow-sm">
@@ -52,17 +58,29 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
 
             {/* Visual Core */}
             <div className="relative w-64 h-64 my-4 flex items-center justify-center">
-                <div className="w-48 h-48 rounded-full border-4 border-double border-white/10 flex items-center justify-center bg-black/50 overflow-hidden relative">
-                    {/* Abstract visual representation based on color */}
-                    <div className="absolute inset-0 opacity-50 contrast-125"
-                        style={{
-                            background: `radial-gradient(circle at 30% 30%, ${data.soul_color}, transparent 60%),
-                                  radial-gradient(circle at 70% 70%, #000, transparent)`
-                        }}
-                    />
+                <div
+                    className="w-48 h-48 rounded-full border-4 border-double border-white/10 flex items-center justify-center bg-black/50 overflow-hidden relative transition-transform duration-700 group-hover:scale-105"
+                    style={stoneStyle}
+                >
+                    {/* Add a hard light reflection overlay for gem effect */}
+                    {isLegendary && (
+                        <div className="absolute top-8 left-8 w-12 h-8 bg-white/90 rounded-full blur-[2px] opacity-90 mix-blend-overlay rotate-[-45deg]" />
+                    )}
+
+                    {/* Low density texture fallback */}
+                    {!isLegendary && (
+                        <div className="absolute inset-0 opacity-50 contrast-125"
+                            style={{
+                                background: `radial-gradient(circle at 30% 30%, ${data.soul_color}, transparent 60%),
+                                      radial-gradient(circle at 70% 70%, #000, transparent)`
+                            }}
+                        />
+                    )}
+
                     {/* Shine */}
-                    <div className="absolute top-4 left-4 w-10 h-10 bg-white/10 blur-xl rounded-full" />
-                    <div className="text-white/20 text-4xl relative z-10">💎</div>
+                    {!isLegendary && <div className="absolute top-4 left-4 w-10 h-10 bg-white/10 blur-xl rounded-full" />}
+
+                    <div className="text-white/20 text-4xl relative z-10 mix-blend-overlay">💎</div>
                 </div>
             </div>
 
