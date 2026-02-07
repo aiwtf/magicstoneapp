@@ -65,6 +65,22 @@ export default function Home() {
                 </span>
               </div>
             </button>
+
+            {/* TEMP GEO TEST (For Onboarding Users) */}
+            <button
+              onClick={async () => {
+                try {
+                  const { getCurrentLocation } = await import("./utils/geoEngine");
+                  const result = await getCurrentLocation();
+                  alert(`📍 成功獲取 Geohash: ${result.geohash}\n(精度 Level 5 ≈ 5km 盲盒範圍)\n經緯度 (隱藏): ${result.location.lat.toFixed(2)}, ${result.location.lon.toFixed(2)}`);
+                } catch (e: any) {
+                  alert("❌ 定位錯誤 (是否已允許權限?): " + (e.message || "Unknown error"));
+                }
+              }}
+              className="block mx-auto mt-8 text-[10px] text-zinc-800 hover:text-zinc-600 cursor-pointer transition-colors"
+            >
+              [測試] 點擊測試 Geohash 連線
+            </button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-1000">
@@ -145,6 +161,22 @@ export default function Home() {
             {/* Chat Input (Unlockable feature) */}
             <div className="w-full mt-4">
               <SoulInput onSend={absorbSoul} isLoading={isAbsorbing} />
+
+              {/* TEMP GEO TEST (Hidden in Production generally, but useful for QA) */}
+              <button
+                onClick={async () => {
+                  try {
+                    const { getCurrentLocation } = await import("./utils/geoEngine");
+                    const result = await getCurrentLocation();
+                    alert(`📍 成功獲取 Geohash: ${result.geohash}\n(精度 Level 5 ≈ 5km 盲盒範圍)\n經緯度 (隱藏): ${result.location.lat.toFixed(2)}, ${result.location.lon.toFixed(2)}`);
+                  } catch (e: any) {
+                    alert("❌ 定位錯誤 (是否已允許權限?): " + (e.message || "Unknown error"));
+                  }
+                }}
+                className="mt-4 w-full text-center text-[10px] text-zinc-800 hover:text-zinc-600 cursor-pointer transition-colors"
+              >
+                [測試] 點擊測試 Geohash 連線
+              </button>
             </div>
           </div>
         )}

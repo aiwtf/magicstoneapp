@@ -85,7 +85,7 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
                 <Icosahedron
                     ref={meshRef}
                     args={[1, detail]} // Dynamic Geometry
-                    scale={1.5}
+                    scale={1.15}
                     onClick={(e) => {
                         e.stopPropagation();
                         if (onClick) onClick();
