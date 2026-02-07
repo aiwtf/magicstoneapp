@@ -23,6 +23,8 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
     const [copied, setCopied] = useState(false);
     const [selectedOracle, setSelectedOracle] = useState<OracleType | 'Unknown'>('Unknown');
 
+    const [manualInput, setManualInput] = useState("");
+
     // Auto-sense return logic (simplified from previous version)
     // We can rely on the user manually clicking "Materialize" for robust feedback,
     // or keep the window focus listener. Let's keep the manual button dominant but add a pulse on focus.
@@ -86,11 +88,22 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
         }
     };
 
-    const handleMaterialize = async () => {
+    const handleMaterialize = async (inputText: string = "") => {
         setIsThinking(true);
         setError('');
         try {
-            const textData = await navigator.clipboard.readText();
+            // Use manual input preferentially, fallback to clipboard only if empty (desktop convenience)
+            // But on mobile, clipboard read often fails, so manual input is key.
+            let textData = inputText.trim();
+
+            if (!textData) {
+                try {
+                    textData = await navigator.clipboard.readText();
+                } catch (e) {
+                    throw new Error("Clipboard access denied. Please paste text manually.");
+                }
+            }
+
             // Robust parsing via soulEngine
             const rawData = extractSoulJSON(textData);
 
@@ -129,10 +142,10 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
 
             return;
 
-        } catch (e) {
+        } catch (e: any) {
             setIsThinking(false);
             console.error(e);
-            setError("Could not find the Soul Signature. Did you copy the FULL AI response?");
+            setError(e.message || "Could not find the Soul Signature. Did you copy the FULL AI response?");
         }
     };
 
@@ -225,30 +238,28 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             key="await"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="p-8 pt-0 space-y-6"
+                            className="p-8 pt-0 space-y-4"
                         >
-                            {/* Status Indicator */}
-                            <div className="flex flex-col items-center justify-center gap-4 py-8">
-                                <div className={`relative w-16 h-16 flex items-center justify-center rounded-full border border-white/10 ${hasReturned ? 'animate-none' : 'animate-pulse'}`}>
-                                    {hasReturned ? <Zap className="w-6 h-6 text-purple-400" /> : <ExternalLink className="w-6 h-6 text-zinc-600" />}
-                                    {hasReturned && <div className="absolute inset-0 bg-purple-500/20 blur-xl rounded-full animate-pulse" />}
-                                </div>
-                                <p className="text-xs text-zinc-500 uppercase tracking-widest animate-pulse">
-                                    {hasReturned ? t('btn.listening') : t('btn.waiting')}
+                            {/* Manual Input Area */}
+                            <div className="w-full flex flex-col gap-4">
+                                <p className="text-xs text-zinc-400 text-center uppercase tracking-widest">
+                                    {t('btn.waiting')}
                                 </p>
-                            </div>
+                                <textarea
+                                    className="w-full h-32 bg-zinc-900/50 border border-zinc-700 rounded-lg p-3 text-xs text-zinc-300 focus:outline-none focus:border-purple-500 placeholder:text-zinc-600 resize-none font-mono"
+                                    placeholder="Paste the full AI response here..."
+                                    value={manualInput}
+                                    onChange={(e) => setManualInput(e.target.value)}
+                                />
 
-                            {/* Materialize Action */}
-                            <button
-                                onClick={handleMaterialize}
-                                disabled={isThinking}
-                                className={`w-full py-4 text-xs font-bold uppercase tracking-[0.2em] rounded-lg transition-all border ${hasReturned
-                                    ? 'bg-white text-black hover:bg-zinc-200 border-white'
-                                    : 'bg-black/50 text-zinc-600 border-white/10'
-                                    }`}
-                            >
-                                {isThinking ? t('btn.divining') : t('btn.materialize')}
-                            </button>
+                                <button
+                                    onClick={() => handleMaterialize(manualInput)}
+                                    disabled={!manualInput.trim() || isThinking}
+                                    className="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-xs shadow-lg shadow-purple-900/20"
+                                >
+                                    {isThinking ? t('btn.divining') : "🔮 " + t('btn.materialize')}
+                                </button>
+                            </div>
 
                             {error && (
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center justify-center gap-2 text-red-400 text-[10px] uppercase tracking-wider text-center">

@@ -33,7 +33,25 @@ export async function getCurrentLocation(): Promise<GeoResult> {
                 });
             },
             (error) => {
-                reject(error);
+                // SMART ERROR HANDLING
+                if (error.code === 1) { // PERMISSION_DENIED
+                    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+                    let errorMsg = "定位權限被拒絕。請允許權限以尋找靈魂。";
+
+                    if (isIOS) {
+                        // Specific Path for iOS Users
+                        errorMsg = "⚠️ 無法取得位置\n\n請前往 iPhone 設定 > 隱私權與安全性 > 定位服務 > Safari 網站 > 勾選「使用 App 期間」。\n(設定完後請重新整理網頁)";
+                    } else {
+                        // General Android/Desktop Path
+                        errorMsg = "⚠️ 無法取得位置\n\n請檢查瀏覽器設定或系統權限，確保已允許存取位置。";
+                    }
+
+                    alert(errorMsg);
+                    reject(new Error("PERMISSION_DENIED"));
+                } else {
+                    reject(error);
+                }
             },
             {
                 enableHighAccuracy: true,

@@ -88,33 +88,31 @@ User History to Analyze:
  * Uses robust substring extraction to find the JSON block.
  */
 export function extractSoulJSON(text: string): SoulJSON {
-    // 1. Find the first '{' and the last '}'
-    const firstBrace = text.indexOf('{');
-    const lastBrace = text.lastIndexOf('}');
-
-    if (firstBrace === -1 || lastBrace === -1) {
-        throw new Error("No soul signature found (Missing JSON brackets).");
-    }
-
-    // 2. Extract the potential JSON block
-    const jsonCandidate = text.substring(firstBrace, lastBrace + 1);
-
-    // 3. Parse
     try {
-        // Handle potential markdown wrappers if they are inside the braces (unlikely but possible if strict)
-        // cleanCandidate = jsonCandidate.replace(/```json/g, '').replace(/```/g, ''); 
-        // But usually { ... } captures the content.
+        // 1. Pre-cleaning: Remove markdown code blocks if present
+        let cleanText = text.replace(/```json/g, "").replace(/```/g, "");
 
-        const data = JSON.parse(jsonCandidate);
+        // 2. Find the *First* '{' and *Last* '}'
+        const firstOpen = cleanText.indexOf('{');
+        const lastClose = cleanText.lastIndexOf('}');
 
-        // Validate essential fields
-        if (!data.dimensions || !data.archetype_name) {
-            throw new Error("Incomplete Soul Structure.");
+        if (firstOpen === -1 || lastClose === -1) {
+            throw new Error("JSON brackets {} not found.");
         }
+
+        // 3. Extract just the JSON part
+        const jsonString = cleanText.substring(firstOpen, lastClose + 1);
+
+        // 4. Parse
+        const data = JSON.parse(jsonString);
+
+        // 5. Basic Validation
+        if (!data.dimensions) throw new Error("Missing dimensions.");
+
         return data as SoulJSON;
-    } catch (e) {
-        console.error(e);
-        throw new Error("Soul corruption detected. Please copy the AI response again.");
+    } catch (err) {
+        console.error("Parsing Error:", err);
+        throw new Error("無法辨識靈魂數據。請確認您複製了包含 {...} 的完整 AI 回覆。");
     }
 }
 
