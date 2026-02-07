@@ -100,7 +100,7 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                 try {
                     textData = await navigator.clipboard.readText();
                 } catch (e) {
-                    throw new Error("Clipboard access denied. Please paste text manually.");
+                    throw new Error("⚠️ 請長按輸入框貼上 AI 回覆 (Please paste AI response)");
                 }
             }
 
@@ -254,7 +254,7 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
 
                                 <button
                                     onClick={() => handleMaterialize(manualInput)}
-                                    disabled={!manualInput.trim() || isThinking}
+                                    disabled={isThinking}
                                     className="w-full py-4 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-widest text-xs shadow-lg shadow-purple-900/20"
                                 >
                                     {isThinking ? t('btn.divining') : "🔮 " + t('btn.materialize')}

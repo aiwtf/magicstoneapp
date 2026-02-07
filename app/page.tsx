@@ -7,6 +7,7 @@ import MagicStone from "./components/MagicStone";
 // import IncantationModal from "./components/IncantationModal"; // Legacy
 import RitualAltar from "./components/RitualAltar"; // New
 import SoulRadar from "./components/SoulRadar";
+import SoulStatus from "./components/SoulStatus";
 import SoulReadingModal from "./components/SoulReadingModal";
 import MintingModal from "./components/MintingModal"; // New
 import SoulCompass from "./components/SoulCompass"; // New
@@ -57,6 +58,9 @@ export default function Home() {
 
       {/* Background Ambience */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black pointer-events-none" />
+
+      {/* Trust & Auth Indicator */}
+      <SoulStatus />
 
       {/* Title */}
       <h1 className="z-10 text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400/50 mb-2 tracking-tighter opacity-80">
