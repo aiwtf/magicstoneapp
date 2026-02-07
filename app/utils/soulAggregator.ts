@@ -52,11 +52,18 @@ export interface SoulComposite {
 }
 
 // 3. Density Curve Logic
-function calculateDensity(count: number): number {
-    if (count <= 0) return 0;
-    if (count === 1) return 0.59;
-    if (count === 2) return 0.79;
-    return 0.95; // Base cap for 3+ fragments
+function calculateDensity(count: number, avgConfidence: number): number {
+    // 1. Base Density based on Fragment Count
+    let baseDensity = 0;
+    if (count === 1) baseDensity = 0.6;
+    else if (count === 2) baseDensity = 0.8;
+    else if (count >= 3) baseDensity = 1.0;
+
+    // 2. Apply Confidence Factor
+    // If AI is not confident (e.g. 20%), the stone should be ghostly/faint.
+    const finalDensity = baseDensity * (avgConfidence / 100);
+
+    return parseFloat(finalDensity.toFixed(2));
 }
 
 // 4. The Main Merge Function
@@ -70,6 +77,10 @@ export function aggregateSoul(
         : [newFragment];
 
     const count = allFragments.length;
+
+    // Calculate Average Confidence
+    const totalConf = allFragments.reduce((acc, f) => acc + (f.confidence_score || 50), 0);
+    const avgConf = totalConf / count;
 
     // A. Average the Dimensions
     const totalDims = allFragments.reduce((acc, frag) => ({
@@ -106,7 +117,7 @@ export function aggregateSoul(
 
     return {
         fragments: allFragments,
-        density: calculateDensity(count),
+        density: calculateDensity(count, avgConf),
         dimensions: avgDimensions,
         keywords: Array.from(keywordSet).slice(0, 15),
 
@@ -120,6 +131,6 @@ export function aggregateSoul(
 
         visual_seed: latest.visual_seed,
         soul_color: latest.soul_color,
-        confidence_score: Math.round(allFragments.reduce((acc, f) => acc + (f.confidence_score || 0), 0) / count)
+        confidence_score: Math.round(avgConf)
     };
 }
