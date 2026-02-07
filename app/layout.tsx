@@ -24,8 +24,8 @@ export const metadata: Metadata = {
     title: "Magic Stone",
   },
   icons: {
-    icon: '/icon.png',
-    shortcut: '/favicon.ico',
+    icon: '/icon-v3.png',
+    shortcut: '/favicon-v3.ico',
     apple: '/apple-touch-icon.png',
   },
 };
