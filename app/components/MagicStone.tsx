@@ -39,16 +39,17 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
     // Low Density < 0.6 = Raw Ore (Rough, Dark)
     // High Density > 0.8 = Polished Gem (Shiny, Smooth)
 
-    const roughness = lerp(0.9, 0.1, density);
-    const metalness = lerp(0.2, 0.8, density);
+    const roughness = lerp(1.0, 0.1, density); // 1.0 = Very Rough (Coal)
+    const metalness = lerp(0.0, 0.9, density); // 0.0 = Matte (Coal)
 
     // Always Solid
     const transmission = 0;
 
     const entropyFactor = entropy / 100;
-    // Reduced distortion: Organic (0.3) -> Stable (0.0)
-    const distortAmount = lerp(0.3, 0.0, density) + (entropyFactor * 0.1);
-    const distortSpeed = lerp(1, 3, entropyFactor);
+    // Reduced distortion: Rock (0.1) -> Crystal (0.0)
+    // "Gas"/"Cloud" look usually comes from high distortion + transparency
+    const distortAmount = lerp(0.1, 0.0, density) + (entropyFactor * 0.05);
+    const distortSpeed = lerp(0.5, 2, entropyFactor); // Slower movement for rock
 
     // Geometric Detail (Shape Morphology)
     const detail = Math.round(4 * (1 - (rigidness / 100)));
@@ -97,7 +98,7 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
                     <MeshDistortMaterial
                         color={color}
                         envMapIntensity={1}
-                        clearcoat={1}
+                        clearcoat={density > 0.6 ? 1 : 0}
                         clearcoatRoughness={0.1}
                         metalness={metalness}
                         roughness={roughness}
@@ -105,8 +106,8 @@ export default function MagicStone({ soul, onClick }: MagicStoneProps) {
                         thickness={2}
                         distort={distortAmount}
                         speed={distortSpeed}
-                        transparent={true}
-                        opacity={isWeak ? 0.4 : 1.0}
+                        transparent={false}
+                        opacity={1}
                     />
                 </Icosahedron>
             </Float>

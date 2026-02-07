@@ -40,7 +40,7 @@ export default function Home() {
       const { geohash } = await getCurrentLocation();
 
       await broadcastSignal({
-        id: crypto.randomUUID(),
+        // id is now auto-managed (stable)
         geohash: geohash,
         soul_vector: compressSoulVector(soulData),
         timestamp: Date.now()

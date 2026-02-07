@@ -16,6 +16,8 @@ interface Blip {
     distance: number; // meters
     similarity: number; // 0-1
     isGold: boolean;
+    isActive: boolean;
+    timestamp: number;
 }
 
 export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
@@ -47,7 +49,7 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
 
                 // C. Process Signals
                 const processed = signals
-                    .filter(s => s.id !== userSoul.fragments[0]?.id) // Exclude self (heuristic)
+                    .filter(s => s.id !== localStorage.getItem('soul_signal_id')) // Exclude self (Using stable ID)
                     .map(signal => {
                         // 1. Calculate Similarity (Cosine or simple Euclidean diff inverted)
                         // Simple 1 - AvgDiff approach
@@ -72,12 +74,17 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
                         const pseudoAngle = parseInt(signal.id.slice(0, 4), 16) % 360;
                         const pseudoDist = (parseInt(signal.id.slice(4, 8), 16) % 800) + 100; // 100m - 900m virtual display
 
+                        // 3. Activity Check (< 1 Hour = Active)
+                        const isRecent = (Date.now() - signal.timestamp) < 60 * 60 * 1000; // 1 hour active window
+
                         return {
                             id: signal.id,
                             bearing: pseudoAngle,
                             distance: pseudoDist,
                             similarity: similarity,
-                            isGold: similarity > 0.9
+                            isGold: similarity > 0.9,
+                            isActive: isRecent,
+                            timestamp: signal.timestamp
                         };
                     })
                     .filter(b => b.similarity > 0.6); // Ghost Filter
@@ -137,7 +144,7 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
                     <motion.div
                         key={blip.id}
                         initial={{ scale: 0, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        animate={{ scale: 1, opacity: blip.isActive ? 1 : 0.4 }}
                         className="absolute w-12 h-12 flex items-center justify-center cursor-pointer group"
                         style={{
                             top: '50%',
@@ -148,8 +155,8 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
                     >
                         {/* The Dot */}
                         <div className={`w-3 h-3 rounded-full transition-all duration-500 ${blip.isGold
-                                ? 'bg-yellow-400 shadow-[0_0_15px_gold]'
-                                : 'bg-purple-500/50 shadow-[0_0_10px_purple] group-hover:bg-purple-400'
+                            ? 'bg-yellow-400 shadow-[0_0_15px_gold]'
+                            : 'bg-purple-500/50 shadow-[0_0_10px_purple] group-hover:bg-purple-400'
                             }`} />
 
                         {/* Ripple Effect for Gold */}
@@ -173,11 +180,18 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
                         <div className="flex items-start justify-between">
                             <div>
                                 <h3 className={`text-lg font-bold ${selectedBlip.isGold ? 'text-yellow-400' : 'text-purple-300'}`}>
-                                    {selectedBlip.isGold ? 'Golden Resonance' : 'Wandering Soul'}
+                                    {selectedBlip.isGold
+                                        ? (selectedBlip.isActive ? 'Golden Resonance' : 'Dormant Gold')
+                                        : (selectedBlip.isActive ? 'Wandering Soul' : 'Dormant Soul')}
                                 </h3>
-                                <p className="text-zinc-500 text-xs mt-1">
-                                    Match: {Math.round(selectedBlip.similarity * 100)}%
-                                </p>
+                                <div className="flex flex-col mt-1">
+                                    <p className="text-zinc-500 text-xs">
+                                        Match: {Math.round(selectedBlip.similarity * 100)}%
+                                    </p>
+                                    <p className={`text-[10px] uppercase tracking-wider ${selectedBlip.isActive ? 'text-green-500/70' : 'text-zinc-600'}`}>
+                                        {selectedBlip.isActive ? '● Live Signal' : `Last seen ${Math.round((Date.now() - selectedBlip.timestamp) / 3600000)}h ago`}
+                                    </p>
+                                </div>
                             </div>
                             <button onClick={() => setSelectedBlip(null)} className="text-zinc-500">x</button>
                         </div>
