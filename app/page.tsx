@@ -57,7 +57,7 @@ export default function Home() {
       {/* Hero Video Background */}
       <video
         className="absolute top-0 left-0 w-full h-full object-cover z-0"
-        src="/hero.mp4"
+        src="/hero_v2.mp4"
         poster="/black.png"
         autoPlay
         loop
