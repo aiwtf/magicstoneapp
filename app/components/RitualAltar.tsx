@@ -170,6 +170,14 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
         }
     };
 
+    // Safety timeout for video
+    useEffect(() => {
+        if (isMaterializing) {
+            const timer = setTimeout(handleVideoEnd, 5000); // Max 5s transition
+            return () => clearTimeout(timer);
+        }
+    }, [isMaterializing]);
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
             {/* Video Transition Overlay */}
@@ -180,6 +188,7 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[100] bg-black flex items-center justify-center pointer-events-auto"
+                        onClick={handleVideoEnd} // Click to skip
                     >
                         <video
                             src="/input.mp4"
@@ -187,7 +196,11 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             playsInline
                             className="w-full h-full object-cover"
                             onEnded={handleVideoEnd}
+                            onError={(e) => { console.error("Video Failed", e); handleVideoEnd(); }}
                         />
+                        <div className="absolute bottom-10 text-white/50 text-xs tracking-widest uppercase animate-pulse">
+                            Tap to Skip
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>

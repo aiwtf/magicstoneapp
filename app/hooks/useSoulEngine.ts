@@ -28,16 +28,14 @@ export function useSoulEngine() {
     const injectFragment = (fragment: SoulFragment) => {
         setIsAbsorbing(true);
 
-        // Simulate processing
-        setTimeout(() => {
-            setSoulComposite(prev => {
-                const newComposite = aggregateSoul(prev, fragment);
-                localStorage.setItem("magic_stone_composite", JSON.stringify(newComposite));
-                return newComposite;
-            });
-            setProgress(100);
-            setIsAbsorbing(false);
-        }, 1200);
+        // Instant update (Video transition already provided the delay)
+        setSoulComposite(prev => {
+            const newComposite = aggregateSoul(prev, fragment);
+            localStorage.setItem("magic_stone_composite", JSON.stringify(newComposite));
+            return newComposite;
+        });
+        setProgress(100);
+        setIsAbsorbing(false);
     };
 
     const absorbSoul = async (input: string) => {
