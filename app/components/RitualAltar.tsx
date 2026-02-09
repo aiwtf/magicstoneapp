@@ -138,8 +138,10 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                 source: selectedOracle,
                 timestamp: Date.now(),
 
+                soul_title: rawData.soul_title || rawData.archetype?.name || "Unknown Soul",
                 archetype_name: rawData.soul_title || rawData.archetype?.name || "Unknown Soul",
                 archetype_description: rawData.essence_summary || rawData.archetype?.description || "",
+                essence_summary: rawData.essence_summary || rawData.archetype?.description || "",
 
                 // Deep Protocol Mapping
                 core_tension: rawData.core_tension,

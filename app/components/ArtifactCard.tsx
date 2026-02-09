@@ -88,7 +88,9 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
             <div className="w-full bg-white/5 p-4 rounded-lg backdrop-blur-sm border border-white/5 flex items-center justify-between gap-4">
                 <div className="text-left flex-1">
                     <p className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Core Tension</p>
-                    <p className="text-sm font-bold text-white tracking-wide">{data.core_tension || "Unresolved"}</p>
+                    <p className="text-sm font-bold text-white tracking-wide">
+                        {typeof data.core_tension === 'object' ? data.core_tension.conflict : (data.core_tension || "Unresolved")}
+                    </p>
                 </div>
                 <div className="p-1 bg-white rounded-sm shrink-0">
                     <QRCodeSVG value={shareUrl} size={48} />

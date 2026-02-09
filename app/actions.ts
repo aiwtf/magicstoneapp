@@ -67,16 +67,38 @@ export async function verifySharedLink(url: string, expectedNonce: string): Prom
 
             foundData = {
                 verification_code: expectedNonce,
-                soul_color: color,
+                soul_title: "Verified Soul",
                 archetype_name: "Verified Soul",
                 archetype_description: "The Oracle has confirmed your identity through the ethereal link.",
-                core_tension: "Balance vs Chaos",
-                narrative_phase: "Awakening",
+                essence_summary: "The Oracle has confirmed your identity through the ethereal link.",
+                confidence_score: 100,
+
+                core_tension: {
+                    conflict: "Balance vs Chaos",
+                    description: "The eternal struggle between order and entropy."
+                },
+                operating_system: {
+                    decision_model: "Intuitive",
+                    emotional_structure: "Stable",
+                    crisis_mode: "Observation",
+                    cognitive_bias: "Optimism"
+                },
+                depth_analysis: {
+                    unlived_potential: "Unknown",
+                    shadow_traits: "None observable",
+                    karmic_lesson: "To trust the process."
+                },
+                resonance: {
+                    visual_aesthetic: "Ethereal",
+                    philosophical_root: "Stoicism"
+                },
+
+                soul_color: color,
                 dimensions: {
                     structure: 50, luminosity: 50, resonance: 50, ethereal: 50,
                     volatility: 50, entropy: 50, cognitive_rigidness: 50, narrative_depth: 50
                 },
-                cognitive_biases: ["Optimism Bias"],
+                keywords: ["Verified", "Link", "Soul"],
                 visual_seed: expectedNonce
             } as SoulJSON;
         }

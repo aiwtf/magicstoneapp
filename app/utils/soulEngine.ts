@@ -1,3 +1,5 @@
+import { SYSTEM_PROMPT_TEMPLATE } from '../constants';
+
 export interface SoulDimensions {
     structure: number;      // Conscientiousness
     luminosity: number;     // Extraversion
@@ -44,6 +46,12 @@ export interface SoulJSON {
     essence_summary: string;
 
     // Derived/Legacy Fields for Compatibility
+    archetype?: {
+        name: string;
+        description: string;
+        mbti?: string;
+        enneagram?: string;
+    };
     archetype_name?: string; // Mapped from soul_title
     archetype_description?: string;
     dimensions?: SoulDimensions; // Derived
@@ -226,4 +234,12 @@ export function calculateResonance(hash1: string, hash2: string): number {
 
     // Scale to percentage integer
     return Math.round(similarity * 100);
+}
+
+/**
+ * Generates the Incantation (System Prompt) with a dynamic Nonce embedded.
+ * Used by the Modal for manual copy-paste.
+ */
+export function generateIncantation(nonce: string): string {
+    return SYSTEM_PROMPT_TEMPLATE.replace('{{NONCE}}', nonce);
 }

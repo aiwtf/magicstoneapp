@@ -28,7 +28,7 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
     // Split Conflict if possible
     const tensionRaw = typeof data.core_tension === 'string'
         ? data.core_tension
-        : data.core_tension.conflict;
+        : (data.core_tension?.conflict || "Unresolved");
 
     // Try to split by 'vs' or 'vs.' or 'VS'
     const tensionParts = tensionRaw.split(/ vs\.? /i);
