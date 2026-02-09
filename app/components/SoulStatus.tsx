@@ -6,7 +6,11 @@ import { supabase } from '../utils/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import AuthModal from './AuthModal';
 
-export default function SoulStatus() {
+interface SoulStatusProps {
+    visible?: boolean;
+}
+
+export default function SoulStatus({ visible = true }: SoulStatusProps) {
     const [user, setUser] = useState<any>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [status, setStatus] = useState<'loading' | 'anon' | 'authenticated'>('loading');
@@ -40,7 +44,12 @@ export default function SoulStatus() {
         await supabase.auth.signOut();
     };
 
-    if (status === 'loading') return null; // Or a small spinner
+    if (status === 'loading') return null;
+
+    // Progressive Disclosure Logic:
+    // If authenticated, ALWAYS show (user has account).
+    // If anon, ONLY show if visible is true (user has injected soul).
+    if (status === 'anon' && !visible) return null;
 
     return (
         <>

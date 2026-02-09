@@ -4,13 +4,20 @@ import { useState, useEffect } from 'react';
 import { Share, PlusSquare, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-export default function InstallPrompt() {
+interface InstallPromptProps {
+    trigger?: boolean;
+}
+
+export default function InstallPrompt({ trigger = false }: InstallPromptProps) {
     const [isIOS, setIsIOS] = useState(false);
     const [isStandalone, setIsStandalone] = useState(false);
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showPrompt, setShowPrompt] = useState(false);
 
     useEffect(() => {
+        // Only run logic if triggered
+        if (!trigger) return;
+
         // Check if running in standalone mode (already installed)
         const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
             (window.navigator as any).standalone === true;
@@ -27,16 +34,13 @@ export default function InstallPrompt() {
         const handleBeforeInstallPrompt = (e: Event) => {
             e.preventDefault();
             setDeferredPrompt(e);
-            // Show prompt after a short delay to not accept immediately on load
-            setTimeout(() => setShowPrompt(true), 2000);
+            // Show prompt after a short delay
+            setTimeout(() => setShowPrompt(true), 1500);
         };
 
         // iOS: Show prompt if not standalone
         if (isIosDevice && !isStandaloneMode) {
-            // Check if we've shown it recently to avoid annoyance? 
-            // For now, show it once per session or use localStorage logic later.
-            // Let's just show it after a delay.
-            setTimeout(() => setShowPrompt(true), 3000);
+            setTimeout(() => setShowPrompt(true), 2500); // Slightly longer for iOS "Aha" moment
         }
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -44,7 +48,7 @@ export default function InstallPrompt() {
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
         };
-    }, []);
+    }, [trigger]); // Re-run when trigger changes
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return;

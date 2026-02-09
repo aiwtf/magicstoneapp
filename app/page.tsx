@@ -11,6 +11,7 @@ import SoulStatus from "./components/SoulStatus";
 import SoulReadingModal from "./components/SoulReadingModal";
 import MintingModal from "./components/MintingModal"; // New
 import SoulCompass from "./components/SoulCompass"; // New
+import InstallPrompt from "./components/InstallPrompt"; // Progressive Disclosure
 import { broadcastSignal, compressSoulVector } from "./utils/signalRelay"; // New
 import { useSoulEngine } from "./hooks/useSoulEngine";
 import { Sparkles, RefreshCw, Radio, Gem, Compass } from "lucide-react";
@@ -73,8 +74,11 @@ export default function Home() {
       {/* Background Ambience (on top of video) */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent pointer-events-none z-[2]" />
 
-      {/* Trust & Auth Indicator */}
-      <SoulStatus />
+      {/* Trust & Auth Indicator (Progressive Disclosure) */}
+      <SoulStatus visible={isInitialized} />
+
+      {/* PWA Install Prompt (Triggered after Soul Injection) */}
+      <InstallPrompt trigger={isInitialized} />
 
       {/* Title */}
       <h1 className="z-10 text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400/50 mb-2 tracking-tighter opacity-80">
@@ -159,19 +163,31 @@ export default function Home() {
                   localStorage.removeItem('magic_stone_composite');
                   window.location.reload();
                 }}
-                className="p-3 rounded-full bg-zinc-900/50 text-zinc-600 hover:text-red-400 hover:bg-red-900/10 transition-all border border-zinc-800"
-                title={t('btn.reset')}
+                className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-full hover:bg-zinc-800 hover:text-red-400 transition-all text-zinc-500"
               >
                 <RefreshCw className="w-4 h-4" />
               </button>
 
-              {/* Compass Button */}
+              {/* Radar Button */}
+              <button
+                onClick={() => setShowRadar(true)}
+                className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-purple-900/30 rounded-full hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all group"
+              >
+                <Radio className="w-4 h-4 text-purple-400 group-hover:animate-pulse" />
+                <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-purple-300">
+                  {t('btn.radar')}
+                </span>
+              </button>
+
+              {/* Compass Button (New) */}
               <button
                 onClick={handleOpenCompass}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-cyan-400 hover:bg-cyan-900/10 transition-all border border-zinc-800 hover:border-cyan-800/50"
+                className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-blue-900/30 rounded-full hover:border-blue-500/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all group"
               >
-                <Compass className="w-4 h-4" />
-                <span className="text-xs tracking-widest uppercase">Compass</span>
+                <Compass className="w-4 h-4 text-blue-400 group-hover:rotate-45 transition-transform duration-500" />
+                <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-blue-300">
+                  Broadcast
+                </span>
               </button>
 
               {/* Inject More (Loop) */}
@@ -183,18 +199,19 @@ export default function Home() {
                 <Sparkles className="w-4 h-4" />
               </button>
 
-              {/* Mint Artifact Button (New) */}
+              {/* Mint Button (New) */}
               <button
-                onClick={() => canMint && setShowMinting(true)}
+                onClick={() => setShowMinting(true)}
                 disabled={!canMint}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full transition-all border ${canMint
-                  ? 'bg-yellow-900/20 border-yellow-500/50 text-yellow-500 hover:bg-yellow-500 hover:text-black cursor-pointer shadow-[0_0_15px_rgba(234,179,8,0.2)]'
-                  : 'bg-zinc-900/50 border-zinc-800 text-zinc-700 cursor-not-allowed'
+                className={`flex items-center gap-2 px-6 py-3 rounded-full border transition-all group ${canMint
+                  ? 'bg-zinc-900 border-emerald-900/30 hover:border-emerald-500/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer'
+                  : 'bg-zinc-950 border-zinc-900 opacity-50 cursor-not-allowed'
                   }`}
-                title={canMint ? "Mint Soulbound Artifact" : "Density must be > 80% to Mint"}
               >
-                <Gem className="w-4 h-4" />
-                <span className="text-xs tracking-widest uppercase">Mint</span>
+                <Gem className={`w-4 h-4 ${canMint ? 'text-emerald-400' : 'text-zinc-700'}`} />
+                <span className={`text-xs font-medium tracking-wider uppercase ${canMint ? 'text-zinc-300 group-hover:text-emerald-300' : 'text-zinc-700'}`}>
+                  Mint Artifact
+                </span>
               </button>
             </div>
 

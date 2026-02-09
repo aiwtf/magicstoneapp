@@ -85,13 +85,9 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
         }
 
         if (isMobile && appScheme) {
-            // Attempt to open App
+            // Attempt to open App ONLY
+            // If app is not installed, nothing happens (per user request)
             window.location.href = appScheme;
-
-            // Fallback to Web if App not installed (short delay)
-            setTimeout(() => {
-                window.open(webUrl, '_blank');
-            }, 1000);
         } else {
             // Desktop: Direct Web Open
             window.open(webUrl, '_blank');
@@ -223,7 +219,7 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-widest">
                                     <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold">1</div>
-                                    <span>Source</span>
+                                    <span>{t('altar.label.source')}</span>
                                 </div>
                                 <button
                                     onClick={() => {
@@ -242,24 +238,26 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             <div className="space-y-2">
                                 <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-widest">
                                     <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold">2</div>
-                                    <span>Instruction</span>
+                                    <span>{t('altar.label.instruction')}</span>
                                 </div>
                                 <div className="p-4 bg-zinc-900/50 rounded-xl border border-white/5 text-xs text-zinc-300 leading-relaxed">
                                     {t('altar.step2.desc')}
                                 </div>
                             </div>
 
-                            {/* Step 3: Open App */}
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-widest">
-                                    <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold">3</div>
-                                    <span>Destination</span>
-                                </div>
+                            {/* Step 3: Open App (No Header) */}
+                            <div className="space-y-2 pt-2">
                                 <button
                                     onClick={handleOpenApp}
                                     className="w-full py-4 text-xs font-bold uppercase tracking-[0.2em] bg-white text-black hover:bg-zinc-200 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-white/10"
                                 >
-                                    {t('altar.step3.btn')} <ExternalLink className="w-3 h-3" />
+                                    {/* Dynamic Label Logic */}
+                                    {selectedOracle === 'ChatGPT' && t('btn.open.chatgpt')}
+                                    {selectedOracle === 'Gemini' && t('btn.open.gemini')}
+                                    {selectedOracle === 'Claude' && t('btn.open.claude')}
+                                    {!['ChatGPT', 'Gemini', 'Claude'].includes(selectedOracle) && t('altar.step3.btn')}
+
+                                    <ExternalLink className="w-3 h-3" />
                                 </button>
                             </div>
 
