@@ -103,9 +103,6 @@ export default function Home() {
                   <Sparkles className="w-4 h-4" />
                   {t('btn.begin')}
                 </div>
-                <span className="text-[10px] text-zinc-600 tracking-widest uppercase group-hover:text-purple-400/70 transition-colors">
-                  {t('btn.begin_sub')}
-                </span>
               </div>
             </button>
 

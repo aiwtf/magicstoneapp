@@ -45,13 +45,13 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
         setSelectedOracle(oracle);
         const prompt = generateSystemPrompt(language);
 
-        // Step A: Magic Copy
-        try {
-            await navigator.clipboard.writeText(prompt);
-            setCopied(true);
-        } catch (err) {
-            console.error("Clipboard failed", err);
-        }
+        // Step A: Magic Copy (DISABLED per Phase 1 UX Simplification)
+        // try {
+        //     await navigator.clipboard.writeText(prompt);
+        //     setCopied(true);
+        // } catch (err) {
+        //     console.error("Clipboard failed", err);
+        // }
 
         // Show Guide Modal instead of immediate redirect
         setStep('guide');
