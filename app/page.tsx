@@ -21,7 +21,7 @@ import LanguageSelector from "./components/LanguageSelector";
 
 // Static Stone Display System (Replacing 3D)
 function StoneDisplay({ soulDensity }: { soulDensity: number }) {
-  // Stable random selection on mount
+  // Stable random selection on mount (1-12)
   const [stoneIndex] = useState(() => Math.floor(Math.random() * 12) + 1);
 
   return (
