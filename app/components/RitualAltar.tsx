@@ -60,31 +60,41 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
     const handleOpenApp = () => {
         setStep('await');
 
-        let url = '';
-        let deepLink = '';
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        let webUrl = '';
+        let appScheme = '';
 
         switch (selectedOracle) {
             case 'ChatGPT':
-                deepLink = 'chatgpt://search'; // Try deep link
-                url = 'https://chatgpt.com/';
+                // iOS/Android Scheme for ChatGPT
+                appScheme = 'chatgpt://conversation';
+                webUrl = 'https://chatgpt.com/';
                 break;
             case 'Gemini':
-                deepLink = 'googleapp://'; // Generic Google App
-                url = 'https://gemini.google.com/';
+                // Gemini is often in Google App or standalone on Android
+                // On iOS, googleapp:// opens the Google App. 
+                // There isn't a dedicated "gemini://" scheme widely supported yet, 
+                // but universal links to gemini.google.com usually work.
+                appScheme = 'googleapp://';
+                webUrl = 'https://gemini.google.com/app';
                 break;
             case 'Claude':
-                url = 'https://claude.ai/new';
+                webUrl = 'https://claude.ai/new';
                 break;
         }
 
-        if (deepLink) {
-            window.location.href = deepLink;
-            // Fallback to web if deep link fails (timeout)
+        if (isMobile && appScheme) {
+            // Attempt to open App
+            window.location.href = appScheme;
+
+            // Fallback to Web if App not installed (short delay)
             setTimeout(() => {
-                window.open(url, '_blank');
-            }, 800);
+                window.open(webUrl, '_blank');
+            }, 1000);
         } else {
-            window.open(url, '_blank');
+            // Desktop: Direct Web Open
+            window.open(webUrl, '_blank');
         }
     };
 
