@@ -29,6 +29,8 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
     // We can rely on the user manually clicking "Materialize" for robust feedback,
     // or keep the window focus listener. Let's keep the manual button dominant but add a pulse on focus.
     const [hasReturned, setHasReturned] = useState(false);
+    const [isMaterializing, setIsMaterializing] = useState(false);
+    const [pendingFragment, setPendingFragment] = useState<SoulFragment | null>(null);
 
     // Focus listener
     useEffect(() => {
@@ -138,12 +140,18 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                 confidence_score: rawData.confidence_score || 80
             };
 
+            setPendingFragment(fragment);
+
+            // Play the video transition regardless of score (it's the ritual!)
+            // But if score is low, maybe we show error first?
+            // Let's follow the "Ceremony" logic: Video plays immediately to build tension.
+
             if (fragment.confidence_score < 40) {
                 setError("Soul Signal Weak. Analysis superficial. Stone will be unstable.");
-                // Proceed anyway after a longer delay to let user see the warning
-                setTimeout(() => onInitialize(fragment), 2500);
+                // Delay slightly to show error, then play video
+                setTimeout(() => setIsMaterializing(true), 1500);
             } else {
-                setTimeout(() => onInitialize(fragment), 800);
+                setIsMaterializing(true);
             }
 
             return;
@@ -155,8 +163,35 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
         }
     };
 
+    const handleVideoEnd = () => {
+        setIsMaterializing(false);
+        if (pendingFragment) {
+            onInitialize(pendingFragment);
+        }
+    };
+
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+            {/* Video Transition Overlay */}
+            <AnimatePresence>
+                {isMaterializing && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="fixed inset-0 z-[100] bg-black flex items-center justify-center pointer-events-auto"
+                    >
+                        <video
+                            src="/input.mp4"
+                            autoPlay
+                            playsInline
+                            className="w-full h-full object-cover"
+                            onEnded={handleVideoEnd}
+                        />
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             <div className="absolute inset-0 bg-noise opacity-20 pointer-events-none"></div>
 
             <div className="relative w-full max-w-lg bg-zinc-900/40 border border-white/10 rounded-3xl overflow-hidden shadow-2xl backdrop-blur-2xl">

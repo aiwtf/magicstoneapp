@@ -19,6 +19,26 @@ import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
 
+// Static Stone Display System (Replacing 3D)
+function StoneDisplay({ soulDensity }: { soulDensity: number }) {
+  // Stable random selection on mount
+  const [stoneIndex] = useState(() => Math.floor(Math.random() * 12) + 1);
+
+  return (
+    <div
+      className="relative w-full max-w-sm aspect-square transition-all duration-1000 ease-out"
+      style={{ opacity: Math.max(0.1, soulDensity) }} // 10% base visibility, scales to 100%
+    >
+      <img
+        src={`/stones/${stoneIndex}.jpg`}
+        alt="Soul Vessel"
+        className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(168,85,247,0.4)] animate-pulse-slow"
+        style={{ mixBlendMode: 'screen' }}
+      />
+    </div>
+  );
+}
+
 export default function Home() {
   const { t } = useLanguage();
   const { progress, isAbsorbing, absorbSoul, injectFragment, soulData } = useSoulEngine();
@@ -128,171 +148,165 @@ export default function Home() {
           </div>
         ) : (
           <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-1000">
-            {/* The Stone (Clickable) */}
-            <div className="w-full h-[600px] relative">
-              <Canvas camera={{ position: [0, 0, 4], fov: 45 }}>
-                <ambientLight intensity={0.5} />
-                <pointLight position={[10, 10, 10]} intensity={1.5} color="#ffffff" />
-                <spotLight position={[-10, -10, -10]} angle={0.15} penumbra={1} intensity={1} color={soulData?.soul_color || '#ffffff'} />
+            {/* The Stone (Static Image Replacement) */}
+            <div className="w-full h-[500px] relative flex items-center justify-center">
+              <StoneDisplay soulDensity={soulData?.density || 0} />
+            </div>
 
-                <MagicStone
-                  soul={soulData}
-                  onClick={() => setShowReading(true)}
+            {/* Density Meter Overlay */}
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64">
+              <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
+                <div
+                  className="h-full bg-purple-500 shadow-[0_0_10px_purple]"
+                  style={{ width: `${(soulData?.density || 0) * 100}%`, transition: 'width 1s ease-out' }}
                 />
-              </Canvas>
-
-              {/* Density Meter Overlay */}
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64">
-                <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
-                  <div
-                    className="h-full bg-purple-500 shadow-[0_0_10px_purple]"
-                    style={{ width: `${(soulData?.density || 0) * 100}%`, transition: 'width 1s ease-out' }}
-                  />
-                </div>
-                <p className="text-[10px] text-center text-zinc-500 mt-2 tracking-widest uppercase">
-                  Soul Density: {Math.round((soulData?.density || 0) * 100)}%
-                </p>
               </div>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-4 mt-8 flex-wrap justify-center">
-              {/* Reset Button */}
-              <button
-                onClick={() => {
-                  localStorage.removeItem('magic_stone_composite');
-                  window.location.reload();
-                }}
-                className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-full hover:bg-zinc-800 hover:text-red-400 transition-all text-zinc-500"
-              >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-
-              {/* Radar Button */}
-              <button
-                onClick={() => setShowRadar(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-purple-900/30 rounded-full hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all group"
-              >
-                <Radio className="w-4 h-4 text-purple-400 group-hover:animate-pulse" />
-                <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-purple-300">
-                  {t('btn.radar')}
-                </span>
-              </button>
-
-              {/* Compass Button (New) */}
-              <button
-                onClick={handleOpenCompass}
-                className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-blue-900/30 rounded-full hover:border-blue-500/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all group"
-              >
-                <Compass className="w-4 h-4 text-blue-400 group-hover:rotate-45 transition-transform duration-500" />
-                <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-blue-300">
-                  Broadcast
-                </span>
-              </button>
-
-              {/* Inject More (Loop) */}
-              <button
-                onClick={() => setShowAltar(true)}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-purple-400 hover:bg-purple-900/10 transition-all border border-zinc-800 hover:border-purple-800/50"
-                title="Inject Soul Fragment"
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
-
-              {/* Mint Button (New) */}
-              <button
-                onClick={() => setShowMinting(true)}
-                disabled={!canMint}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full border transition-all group ${canMint
-                  ? 'bg-zinc-900 border-emerald-900/30 hover:border-emerald-500/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer'
-                  : 'bg-zinc-950 border-zinc-900 opacity-50 cursor-not-allowed'
-                  }`}
-              >
-                <Gem className={`w-4 h-4 ${canMint ? 'text-emerald-400' : 'text-zinc-700'}`} />
-                <span className={`text-xs font-medium tracking-wider uppercase ${canMint ? 'text-zinc-300 group-hover:text-emerald-300' : 'text-zinc-700'}`}>
-                  Mint Artifact
-                </span>
-              </button>
-            </div>
-
-            {/* Chat Input (Unlockable feature) */}
-            <div className="w-full mt-4">
-              <SoulInput onSend={absorbSoul} isLoading={isAbsorbing} />
-
-              {/* TEMP GEO TEST (Hidden in Production generally, but useful for QA) */}
-              <button
-                onClick={async () => {
-                  try {
-                    const { getCurrentLocation } = await import("./utils/geoEngine");
-                    const result = await getCurrentLocation();
-                    alert(`📍 成功獲取 Geohash: ${result.geohash}\n(精度 Level 5 ≈ 5km 盲盒範圍)\n經緯度 (隱藏): ${result.location.lat.toFixed(2)}, ${result.location.lon.toFixed(2)}`);
-                  } catch (e: any) {
-                    alert("❌ 定位錯誤 (是否已允許權限?): " + (e.message || "Unknown error"));
-                  }
-                }}
-                className="mt-4 w-full text-center text-[10px] text-zinc-800 hover:text-zinc-600 cursor-pointer transition-colors"
-              >
-                [測試] 點擊測試 Geohash 連線
-              </button>
+              <p className="text-[10px] text-center text-zinc-500 mt-2 tracking-widest uppercase">
+                Soul Density: {Math.round((soulData?.density || 0) * 100)}%
+              </p>
             </div>
           </div>
-        )}
 
-      </div>
-
-      {/* Modals */}
-      <AnimatePresence>
-        {showAltar && (
-          <RitualAltar
-            onClose={() => setShowAltar(false)}
-            onInitialize={(fragment) => {
-              injectFragment(fragment); // Use new injector
-              setShowAltar(false);
+            {/* Action Buttons */}
+        <div className="flex gap-4 mt-8 flex-wrap justify-center">
+          {/* Reset Button */}
+          <button
+            onClick={() => {
+              localStorage.removeItem('magic_stone_composite');
+              window.location.reload();
             }}
-          />
+            className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-full hover:bg-zinc-800 hover:text-red-400 transition-all text-zinc-500"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
+
+          {/* Radar Button */}
+          <button
+            onClick={() => setShowRadar(true)}
+            className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-purple-900/30 rounded-full hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all group"
+          >
+            <Radio className="w-4 h-4 text-purple-400 group-hover:animate-pulse" />
+            <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-purple-300">
+              {t('btn.radar')}
+            </span>
+          </button>
+
+          {/* Compass Button (New) */}
+          <button
+            onClick={handleOpenCompass}
+            className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-blue-900/30 rounded-full hover:border-blue-500/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all group"
+          >
+            <Compass className="w-4 h-4 text-blue-400 group-hover:rotate-45 transition-transform duration-500" />
+            <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-blue-300">
+              Broadcast
+            </span>
+          </button>
+
+          {/* Inject More (Loop) */}
+          <button
+            onClick={() => setShowAltar(true)}
+            className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-purple-400 hover:bg-purple-900/10 transition-all border border-zinc-800 hover:border-purple-800/50"
+            title="Inject Soul Fragment"
+          >
+            <Sparkles className="w-4 h-4" />
+          </button>
+
+          {/* Mint Button (New) */}
+          <button
+            onClick={() => setShowMinting(true)}
+            disabled={!canMint}
+            className={`flex items-center gap-2 px-6 py-3 rounded-full border transition-all group ${canMint
+              ? 'bg-zinc-900 border-emerald-900/30 hover:border-emerald-500/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer'
+              : 'bg-zinc-950 border-zinc-900 opacity-50 cursor-not-allowed'
+              }`}
+          >
+            <Gem className={`w-4 h-4 ${canMint ? 'text-emerald-400' : 'text-zinc-700'}`} />
+            <span className={`text-xs font-medium tracking-wider uppercase ${canMint ? 'text-zinc-300 group-hover:text-emerald-300' : 'text-zinc-700'}`}>
+              Mint Artifact
+            </span>
+          </button>
+        </div>
+
+        {/* Chat Input (Unlockable feature) */}
+        <div className="w-full mt-4">
+          <SoulInput onSend={absorbSoul} isLoading={isAbsorbing} />
+
+          {/* TEMP GEO TEST (Hidden in Production generally, but useful for QA) */}
+          <button
+            onClick={async () => {
+              try {
+                const { getCurrentLocation } = await import("./utils/geoEngine");
+                const result = await getCurrentLocation();
+                alert(`📍 成功獲取 Geohash: ${result.geohash}\n(精度 Level 5 ≈ 5km 盲盒範圍)\n經緯度 (隱藏): ${result.location.lat.toFixed(2)}, ${result.location.lon.toFixed(2)}`);
+              } catch (e: any) {
+                alert("❌ 定位錯誤 (是否已允許權限?): " + (e.message || "Unknown error"));
+              }
+            }}
+            className="mt-4 w-full text-center text-[10px] text-zinc-800 hover:text-zinc-600 cursor-pointer transition-colors"
+          >
+            [測試] 點擊測試 Geohash 連線
+          </button>
+        </div>
+      </div>
         )}
-      </AnimatePresence>
 
-      {/* Profile Reading Modal */}
-      <AnimatePresence>
-        {showReading && soulData && (
-          <SoulReadingModal
-            isOpen={showReading}
-            onClose={() => setShowReading(false)}
-            data={soulData}
-          />
-        )}
-      </AnimatePresence>
+    </div>
 
-      {/* Soul Radar Overlay */}
-      {showRadar && soulData && (
-        <SoulRadar
-          userSoul={soulData}
-          onClose={() => setShowRadar(false)}
-        />
-      )}
+      {/* Modals */ }
+  <AnimatePresence>
+    {showAltar && (
+      <RitualAltar
+        onClose={() => setShowAltar(false)}
+        onInitialize={(fragment) => {
+          injectFragment(fragment); // Use new injector
+          setShowAltar(false);
+        }}
+      />
+    )}
+  </AnimatePresence>
 
-      {/* Soul Compass */}
-      <AnimatePresence>
-        {showCompass && soulData && (
-          <SoulCompass
-            userSoul={soulData}
-            onClose={() => setShowCompass(false)}
-          />
-        )}
-      </AnimatePresence>
+  {/* Profile Reading Modal */ }
+  <AnimatePresence>
+    {showReading && soulData && (
+      <SoulReadingModal
+        isOpen={showReading}
+        onClose={() => setShowReading(false)}
+        data={soulData}
+      />
+    )}
+  </AnimatePresence>
 
-      {/* Minting Modal */}
-      <AnimatePresence>
-        {showMinting && soulData && (
-          <MintingModal
-            isOpen={showMinting}
-            onClose={() => setShowMinting(false)}
-            data={soulData}
-          />
-        )}
-      </AnimatePresence>
+  {/* Soul Radar Overlay */ }
+  {
+    showRadar && soulData && (
+      <SoulRadar
+        userSoul={soulData}
+        onClose={() => setShowRadar(false)}
+      />
+    )
+  }
 
-    </main>
+  {/* Soul Compass */ }
+  <AnimatePresence>
+    {showCompass && soulData && (
+      <SoulCompass
+        userSoul={soulData}
+        onClose={() => setShowCompass(false)}
+      />
+    )}
+  </AnimatePresence>
+
+  {/* Minting Modal */ }
+  <AnimatePresence>
+    {showMinting && soulData && (
+      <MintingModal
+        isOpen={showMinting}
+        onClose={() => setShowMinting(false)}
+        data={soulData}
+      />
+    )}
+  </AnimatePresence>
+
+    </main >
   );
 }
