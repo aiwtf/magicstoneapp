@@ -75,16 +75,18 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-black selection:bg-purple-900/30 relative overflow-hidden">
 
-      {/* Hero Video Background */}
-      <video
-        className="absolute top-0 left-0 w-full h-full object-cover z-0"
-        src="/hero_v3.mp4"
-        poster="/black.png"
-        autoPlay
-        loop
-        muted
-        playsInline
-      />
+      {/* Hero Video Background - Only active on Landing, unmounts during Ritual/Result */}
+      {(!isInitialized && !showAltar) && (
+        <video
+          className="absolute top-0 left-0 w-full h-full object-cover z-0"
+          src="/hero_v3.mp4"
+          poster="/black.png"
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      )}
 
       {/* Dark Overlay for Text Readability */}
       <div className="absolute inset-0 bg-black/40 z-[1]" />
