@@ -20,28 +20,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         // Simple valid check
         if (saved && translations[saved]) {
             setLanguage(saved);
-        } else {
-            // 1. Force Default to English (Per User Request)
-            // The app must load in English (en) by default for new users.
-            // We ignore navigator.language unless the user manually switches.
-            setLanguage('en');
-
-            // Legacy Auto-detect (Disabled for now)
-            /*
-            const browserLang = navigator.language;
-            if (browserLang.includes('zh-CN')) setLanguage('zh-CN');
-            else if (browserLang.includes('zh')) setLanguage('zh-TW');
-            else if (browserLang.includes('ja')) setLanguage('ja');
-            else if (browserLang.includes('ko')) setLanguage('ko');
-            else if (browserLang.includes('es')) setLanguage('es');
-            else if (browserLang.includes('de')) setLanguage('de');
-            else if (browserLang.includes('it')) setLanguage('it');
-            else if (browserLang.includes('id')) setLanguage('id');
-            else if (browserLang.includes('ru')) setLanguage('ru');
-            else if (browserLang.includes('vi')) setLanguage('vn');
-            else if (browserLang.includes('pl')) setLanguage('pl');
-            */
         }
+        // If no saved language, it remains 'en' (default state).
+        // We strictly ignore navigator.language for new users.
     }, []);
 
     const handleSetLanguage = (lang: Language) => {
