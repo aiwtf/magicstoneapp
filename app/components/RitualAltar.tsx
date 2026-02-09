@@ -209,27 +209,50 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                             exit={{ opacity: 0, x: -20 }}
                             className="p-8 pt-0 space-y-6 text-left"
                         >
-                            <div className="space-y-4 text-zinc-300 text-sm">
-                                <div className="flex items-start gap-3">
-                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">1</div>
-                                    <p className="whitespace-pre-wrap">{t('modal.step1')}</p>
+                            {/* Step 1: Explicit Copy */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-widest">
+                                    <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold">1</div>
+                                    <span>Source</span>
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">2</div>
-                                    <p className="whitespace-pre-wrap">{t('modal.step2')}</p>
+                                <button
+                                    onClick={() => {
+                                        const prompt = generateSystemPrompt(language);
+                                        navigator.clipboard.writeText(prompt);
+                                        setCopied(true);
+                                        // Optional: Toast logic integration if needed, local state for checkmark
+                                    }}
+                                    className={`w-full py-4 rounded-xl border flex items-center justify-center gap-2 transition-all duration-300 ${copied ? 'bg-emerald-900/30 border-emerald-500/50 text-emerald-400' : 'bg-zinc-800/50 border-white/10 hover:bg-zinc-800 hover:border-white/30 text-white'}`}
+                                >
+                                    {copied ? <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />{t('altar.step1.toast')}</div> : <><Copy className="w-4 h-4" /> {t('altar.step1.btn')}</>}
+                                </button>
+                            </div>
+
+                            {/* Step 2: Instruction */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-widest">
+                                    <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold">2</div>
+                                    <span>Instruction</span>
                                 </div>
-                                <div className="flex items-start gap-3">
-                                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-white/10 text-xs font-bold text-white shrink-0 mt-0.5">3</div>
-                                    <p className="whitespace-pre-wrap">{t('modal.step3')}</p>
+                                <div className="p-4 bg-zinc-900/50 rounded-xl border border-white/5 text-xs text-zinc-300 leading-relaxed">
+                                    {t('altar.step2.desc')}
                                 </div>
                             </div>
 
-                            <button
-                                onClick={handleOpenApp}
-                                className="w-full py-4 text-xs font-bold uppercase tracking-[0.2em] bg-white text-black hover:bg-zinc-200 rounded-lg transition-all"
-                            >
-                                Open {selectedOracle === 'Unknown' ? 'App' : selectedOracle}
-                            </button>
+                            {/* Step 3: Open App */}
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-zinc-400 text-[10px] uppercase tracking-widest">
+                                    <div className="w-4 h-4 rounded-full bg-zinc-800 flex items-center justify-center text-white font-bold">3</div>
+                                    <span>Destination</span>
+                                </div>
+                                <button
+                                    onClick={handleOpenApp}
+                                    className="w-full py-4 text-xs font-bold uppercase tracking-[0.2em] bg-white text-black hover:bg-zinc-200 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-white/10"
+                                >
+                                    {t('altar.step3.btn')} <ExternalLink className="w-3 h-3" />
+                                </button>
+                            </div>
+
                         </motion.div>
                     )}
 

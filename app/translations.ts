@@ -45,6 +45,10 @@ export const translations: Record<Language, TranslationDocs> = {
         "modal.step2": "前往 App，粘贴并发送",
         "modal.step3": "复制「完整回复」(文字+JSON) 并返回此处",
         "btn.materialize": "具现化魔法石",
+        "altar.step1.btn": "点击复制咒语",
+        "altar.step1.toast": "已复制！请进行第二步。",
+        "altar.step2.desc": "登录 AI App，开启新对话，长按粘贴咒语，然后将 AI 的完整回复复制回来。",
+        "altar.step3.btn": "开启 AI App",
     },
     "zh-TW": {
         "app.title": "MAGIC STONE", // Hardcoded
@@ -71,6 +75,10 @@ export const translations: Record<Language, TranslationDocs> = {
         "btn.listening": "偵測您的歸來中...",
         "altar.title": "選擇你的神諭",
         "altar.desc": "選擇一個知識載體來解讀你的靈魂。",
+        "altar.step1.btn": "點擊複製咒語",
+        "altar.step1.toast": "已複製！請進行第二步。",
+        "altar.step2.desc": "登入 AI App，開啟新對話，長按貼上咒語，然後將 AI 的完整回覆複製回來。",
+        "altar.step3.btn": "開啟 AI App",
         "prompt.user_request": "請分析我的對話記錄及日記。根據你的隱藏系統指令，提取一份 JSON 格式的『靈魂側寫』。",
         "toast.copied": "咒語已複製。請開啟神諭並貼上。",
     },
