@@ -1,6 +1,5 @@
-
 // 1. Define the input: A single fragment from an AI ritual
-import { SoulDimensions } from './soulEngine';
+import { SoulDimensions, OperatingSystem, DeepSoulAnalysis } from './soulEngine';
 
 export interface SoulFragment {
     id: string;
@@ -10,21 +9,25 @@ export interface SoulFragment {
     // Identity Tags
     archetype_name: string;
     archetype_description: string;
-    mbti_type?: string;        // e.g., INTJ
-    enneagram_type?: string;   // e.g., Type 4
-    keywords: string[];        // Kept for UI compatibility
 
-    // Deep Narratives
-    core_tension?: string;     // e.g., Freedom vs Belonging
-    narrative_phase?: string;  // e.g., The Awakening
+    // Deep Soul Protocol
+    core_tension?: string | { conflict: string; description: string }; // Support both string (legacy) and object (new)
+    operating_system?: OperatingSystem;
+    depth_analysis?: DeepSoulAnalysis;
+    resonance_meta?: { visual_aesthetic: string; philosophical_root: string }; // "resonance" conflicts with dimension name
+
+    mbti_type?: string;
+    enneagram_type?: string;
+    keywords: string[];
+
+    // Legacy/Optional
+    narrative_phase?: string;
     cognitive_biases?: string[];
 
     // The 8-Dimensional Soul Vector
     dimensions: SoulDimensions;
 
     confidence_score: number;
-
-    // Visual/Meta
     visual_seed: string;
     soul_color: string;
 }
@@ -33,16 +36,20 @@ export interface SoulComposite {
     fragments: SoulFragment[];
     density: number;
 
-    // Aggregated Stats
     dimensions: SoulDimensions;
     keywords: string[];
 
     // Latest Meta
     archetype_name: string;
     archetype_description?: string;
+
+    core_tension: string | { conflict: string; description: string };
+    operating_system?: OperatingSystem;
+    depth_analysis?: DeepSoulAnalysis;
+    resonance_meta?: { visual_aesthetic: string; philosophical_root: string };
+
     mbti_type?: string;
     enneagram_type?: string;
-    core_tension: string;
     narrative_phase: string;
     cognitive_biases: string[];
 
@@ -53,16 +60,11 @@ export interface SoulComposite {
 
 // 3. Density Curve Logic
 function calculateDensity(count: number, avgConfidence: number): number {
-    // 1. Base Density based on Fragment Count
     let baseDensity = 0;
     if (count === 1) baseDensity = 0.6;
     else if (count === 2) baseDensity = 0.8;
     else if (count >= 3) baseDensity = 1.0;
-
-    // 2. Apply Confidence Factor
-    // If AI is not confident (e.g. 20%), the stone should be ghostly/faint.
     const finalDensity = baseDensity * (avgConfidence / 100);
-
     return parseFloat(finalDensity.toFixed(2));
 }
 
@@ -123,6 +125,11 @@ export function aggregateSoul(
 
         archetype_name: latest.archetype_name,
         archetype_description: latest.archetype_description,
+
+        // Deep Protocol Fields (New)
+        operating_system: latest.operating_system,
+        depth_analysis: latest.depth_analysis,
+
         mbti_type: latest.mbti_type,
         enneagram_type: latest.enneagram_type,
         core_tension: latest.core_tension || "Unresolved",

@@ -21,7 +21,13 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         if (saved && translations[saved]) {
             setLanguage(saved);
         } else {
-            // Detect browser language
+            // 1. Force Default to English (Per User Request)
+            // The app must load in English (en) by default for new users.
+            // We ignore navigator.language unless the user manually switches.
+            setLanguage('en');
+
+            // Legacy Auto-detect (Disabled for now)
+            /*
             const browserLang = navigator.language;
             if (browserLang.includes('zh-CN')) setLanguage('zh-CN');
             else if (browserLang.includes('zh')) setLanguage('zh-TW');
@@ -32,8 +38,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
             else if (browserLang.includes('it')) setLanguage('it');
             else if (browserLang.includes('id')) setLanguage('id');
             else if (browserLang.includes('ru')) setLanguage('ru');
-            else if (browserLang.includes('vi')) setLanguage('vn'); // navigator usually 'vi' for Vietnamese
+            else if (browserLang.includes('vi')) setLanguage('vn');
             else if (browserLang.includes('pl')) setLanguage('pl');
+            */
         }
     }, []);
 

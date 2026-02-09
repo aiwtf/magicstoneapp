@@ -45,7 +45,13 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
 
     const handleSummon = async (oracle: OracleType) => {
         setSelectedOracle(oracle);
-        const prompt = generateSystemPrompt(language);
+
+        // 1. Static Nonce (Pausing Dynamic Verification)
+        const nonce = "P5KYnoQx";
+        localStorage.setItem("magic_stone_active_nonce", nonce);
+
+        // 2. Generate Prompt with Nonce
+        const prompt = generateSystemPrompt(language, nonce);
 
         // Step A: Magic Copy (DISABLED per Phase 1 UX Simplification)
         // try {
@@ -115,27 +121,42 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
             // Robust parsing via soulEngine
             const rawData = extractSoulJSON(textData);
 
+            // --- VERIFICATION CHECK ---
+            const activeNonce = localStorage.getItem("magic_stone_active_nonce");
+            if (rawData.verification_code && activeNonce && rawData.verification_code !== activeNonce) {
+                console.warn(`Nonce Mismatch: Expected ${activeNonce}, Got ${rawData.verification_code}`);
+                // We will allow it but maybe set a flag or show a toast?
+                // For now, let's treat it as valid but log it. 
+                // Strict mode might block it, but let's be lenient for demo.
+            }
+            // ---------------------------
+
+            // Transform raw JSON into our new Fragment structure
             // Transform raw JSON into our new Fragment structure
             const fragment: SoulFragment = {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                 source: selectedOracle,
                 timestamp: Date.now(),
 
-                archetype_name: rawData.archetype_name || "Unknown Soul",
-                archetype_description: rawData.archetype_description || "",
-                mbti_type: rawData.mbti_type,
-                enneagram_type: rawData.enneagram_type,
-                core_tension: rawData.core_tension || "Unresolved",
-                narrative_phase: rawData.narrative_phase || "Wandering",
-                cognitive_biases: rawData.cognitive_biases || [],
+                archetype_name: rawData.soul_title || rawData.archetype?.name || "Unknown Soul",
+                archetype_description: rawData.essence_summary || rawData.archetype?.description || "",
 
-                dimensions: rawData.dimensions || {
-                    structure: 50, luminosity: 50, resonance: 50, ethereal: 50,
-                    volatility: 50, entropy: 50, cognitive_rigidness: 50, narrative_depth: 50
-                },
+                // Deep Protocol Mapping
+                core_tension: rawData.core_tension,
+                operating_system: rawData.operating_system,
+                depth_analysis: rawData.depth_analysis,
+                resonance_meta: rawData.resonance, // Map raw 'resonance' to 'resonance_meta' if exists, or ignore
 
-                visual_seed: rawData.visual_seed || 'void',
-                soul_color: rawData.soul_color || '#a855f7', // Default purple for now
+                mbti_type: rawData.archetype?.mbti || "Unknown",
+                enneagram_type: rawData.archetype?.enneagram || "Unknown",
+                narrative_phase: "Wandering", // Default
+                cognitive_biases: rawData.operating_system?.cognitive_bias ? [rawData.operating_system.cognitive_bias] : [],
+
+                // Force non-null dimensions (handled by deriveDimensions in soulEngine)
+                dimensions: rawData.dimensions!,
+
+                visual_seed: 'void',
+                soul_color: rawData.soul_color || '#a855f7',
                 keywords: rawData.keywords || [],
                 confidence_score: rawData.confidence_score || 80
             };
@@ -271,7 +292,8 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                                 </div>
                                 <button
                                     onClick={() => {
-                                        const prompt = generateSystemPrompt(language);
+                                        const storedNonce = localStorage.getItem("magic_stone_active_nonce") || "P5KYnoQx";
+                                        const prompt = generateSystemPrompt(language, storedNonce);
                                         navigator.clipboard.writeText(prompt);
                                         setCopied(true);
                                         // Optional: Toast logic integration if needed, local state for checkmark

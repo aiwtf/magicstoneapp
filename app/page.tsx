@@ -11,6 +11,7 @@ import SoulStatus from "./components/SoulStatus";
 import SoulReadingModal from "./components/SoulReadingModal";
 import MintingModal from "./components/MintingModal"; // New
 import SoulCompass from "./components/SoulCompass"; // New
+import SoulResultDisplay from "./components/SoulResultDisplay"; // New Visual System
 import InstallPrompt from "./components/InstallPrompt"; // Progressive Disclosure
 import { broadcastSignal, compressSoulVector } from "./utils/signalRelay"; // New
 import { useSoulEngine } from "./hooks/useSoulEngine";
@@ -19,29 +20,12 @@ import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
 
-// Static Stone Display System (Replacing 3D)
-function StoneDisplay({ soulDensity }: { soulDensity: number }) {
-  // Stable random selection on mount (1-12)
-  const [stoneIndex] = useState(() => Math.floor(Math.random() * 12) + 1);
-
-  return (
-    <div
-      className="relative w-full max-w-sm aspect-square transition-opacity duration-1000 ease-out"
-      style={{ opacity: soulDensity }} // Directly mapped to density (0.0 - 1.0)
-    >
-      <img
-        src={`/stones/${stoneIndex}.jpg`}
-        alt="Soul Vessel"
-        className="w-full h-full object-contain drop-shadow-[0_0_50px_rgba(168,85,247,0.4)]"
-        style={{ mixBlendMode: 'screen' }}
-      />
-    </div>
-  );
-}
-
 export default function Home() {
   const { t } = useLanguage();
   const { progress, isAbsorbing, absorbSoul, injectFragment, soulData } = useSoulEngine();
+
+  // Stable random selection on mount (1-12)
+  const [stoneIndex] = useState(() => Math.floor(Math.random() * 12) + 1);
 
   // soulData is now the composite directly from the hook
   const isInitialized = !!soulData;
@@ -111,11 +95,11 @@ export default function Home() {
       </p>
 
       {/* Main Interaction Area */}
-      <div className="z-10 w-full max-w-md px-4 flex flex-col items-center gap-8">
+      <div className="z-10 w-full max-w-4xl px-4 flex flex-col items-center gap-8">
 
         {/* Onboarding / Stone View */}
         {!isInitialized ? (
-          <div className="text-center space-y-6">
+          <div className="text-center space-y-6 max-w-md">
             <p className="text-zinc-500 text-sm font-light tracking-widest uppercase">
               {t('app.subtitle')}
             </p>
@@ -150,24 +134,8 @@ export default function Home() {
           </div>
         ) : (
           <>
-            <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-1000">
-              {/* The Stone (Static Image Replacement) */}
-              <div className="w-full h-[500px] relative flex items-center justify-center">
-                <StoneDisplay soulDensity={soulData?.density || 0} />
-              </div>
-
-              {/* Density Meter Overlay */}
-              <div className="absolute bottom-10 left-1/2 -translate-x-1/2 w-64">
-                <div className="w-full h-1 bg-zinc-900 rounded-full overflow-hidden border border-zinc-800">
-                  <div
-                    className="h-full bg-purple-500 shadow-[0_0_10px_purple]"
-                    style={{ width: `${(soulData?.density || 0) * 100}%`, transition: 'width 1s ease-out' }}
-                  />
-                </div>
-                <p className="text-[10px] text-center text-zinc-500 mt-2 tracking-widest uppercase">
-                  Soul Density: {Math.round((soulData?.density || 0) * 100)}%
-                </p>
-              </div>
+            <div className="w-full animate-in fade-in zoom-in duration-1000">
+              <SoulResultDisplay data={soulData!} stoneIndex={stoneIndex} />
             </div>
 
             {/* Action Buttons */}

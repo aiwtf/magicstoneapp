@@ -9,29 +9,89 @@ export interface SoulDimensions {
     narrative_depth: number; // Story depth
 }
 
+export interface DeepSoulAnalysis {
+    unlived_potential: string;
+    shadow_traits: string;
+    karmic_anchor?: string; // Legacy or alternative
+    karmic_lesson: string;  // Deep Protocol
+}
+
+export interface OperatingSystem {
+    decision_model: string;
+    emotional_structure: string;
+    crisis_mode: string;
+    cognitive_bias: string; // Deep Protocol
+}
+
 export interface SoulJSON {
     verification_code?: string;
-    // Generated or Enhanced fields
-    visual_seed?: string;
-    soul_color?: string;
-    keywords?: string[];
 
-    // Core AI Response
-    archetype_name: string;
+    // Core Identity
+    soul_title: string;       // Replaces "archetype_name" conceptually, but we map it
+    confidence_score: number;
+
+    // Deep Protocol Fields
+    core_tension: {
+        conflict: string;
+        description: string;
+    };
+    operating_system: OperatingSystem;
+    depth_analysis: DeepSoulAnalysis;
+    resonance: {
+        visual_aesthetic: string;
+        philosophical_root: string;
+    };
+    essence_summary: string;
+
+    // Derived/Legacy Fields for Compatibility
+    archetype_name?: string; // Mapped from soul_title
     archetype_description?: string;
-    mbti_type?: string;
-    enneagram_type?: string;
-    core_tension: string;
-    narrative_phase: string;
-    dimensions: SoulDimensions;
-    cognitive_biases: string[];
-    confidence_score?: number;
+    dimensions?: SoulDimensions; // Derived
+    soul_color?: string; // Derived
+    keywords?: string[]; // Derived
 }
 
 /**
- * Generates a random nonce string for verification.
- * @param length Length of the string (default 8)
+ * Deterministically generates 0-100 dimensions from a text seed.
+ * Ensures the same soul description always yields the same "shape".
  */
+function deriveDimensions(seedText: string): SoulDimensions {
+    const simpleHash = (str: string) => {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash);
+    };
+
+    const getScore = (salt: string) => (simpleHash(seedText + salt) % 100);
+
+    return {
+        structure: getScore("structure"),
+        luminosity: getScore("luminosity"),
+        resonance: getScore("resonance"),
+        ethereal: getScore("ethereal"),
+        volatility: getScore("volatility"),
+        entropy: getScore("entropy"),
+        cognitive_rigidness: getScore("cognitive"),
+        narrative_depth: getScore("narrative")
+    };
+}
+
+/**
+ * Derives a hex color from text.
+ */
+function deriveColor(text: string): string {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+        hash = text.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+    return '#' + "00000".substring(0, 6 - c.length) + c;
+}
+
 export function generateNonce(length: number = 8): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
@@ -41,58 +101,9 @@ export function generateNonce(length: number = 8): string {
     return result;
 }
 
-/**
- * Generates the system prompt (Incantation) for the user to copy.
- * @param nonce The verification code to include in the prompt.
- */
-export function generateIncantation(nonce: string): string {
-    return `You are the Spirit of the Magic Stone, an ancient entity that observes human souls.
-Analyze the provided chat history/diary entries to extract "Soul Data".
-
-PRIVACY RULE: 
-You must NEVER output specific details, names, locations, or sensitive text from the user's history. 
-Only output abstract Archetype names, Keywords, and Numerical scores (0-100). 
-The user will review this JSON, so keep it abstract.
-
-CRITICAL INSTRUCTION:
-You must Output EXACTLY and ONLY a JSON object with the following structure. 
-Do not include any markdown formatting (like \`\`\`json), just the raw JSON string.
-
-Required JSON Structure:
-{
-  "verification_code": "${nonce}",
-  "archetype": "A creative archetype name (e.g. 'The Velvet Storm', 'The Silent Observer')",
-  "soul_color": "A hex color code representing my aura (e.g. #FF5733)",
-  "keywords": ["Keyword1", "Keyword2", "Keyword3"],
-  "summary": "A mystical poetic summary of my soul (approx 50 words).",
-  "dimensions": {
-      "chaos": <number 0-100>,
-      "logic": <number 0-100>,
-      "empathy": <number 0-100>,
-      "mysticism": <number 0-100>
-  },
-  "visual_seed": "A random string based on my vibe"
-}
-
-User History to Analyze:
-[PASTE YOUR CHAT HISTORY HERE]`;
-}
-
-/**
- * Extracts SoulJSON from a larger text block (e.g. mixed response from AI).
- * @param text The text to search in.
- * @param expectedNonce The nonce to verify against.
- */
-/**
- * Extracts SoulJSON from a larger text block (e.g. mixed response from AI).
- * Uses robust substring extraction to find the JSON block.
- */
 export function extractSoulJSON(text: string): SoulJSON {
     try {
-        // 1. Pre-cleaning: Remove markdown code blocks if present
         let cleanText = text.replace(/```json/g, "").replace(/```/g, "");
-
-        // 2. Find the *First* '{' and *Last* '}'
         const firstOpen = cleanText.indexOf('{');
         const lastClose = cleanText.lastIndexOf('}');
 
@@ -100,14 +111,33 @@ export function extractSoulJSON(text: string): SoulJSON {
             throw new Error("JSON brackets {} not found.");
         }
 
-        // 3. Extract just the JSON part
         const jsonString = cleanText.substring(firstOpen, lastClose + 1);
-
-        // 4. Parse
         const data = JSON.parse(jsonString);
 
-        // 5. Basic Validation
-        if (!data.dimensions) throw new Error("Missing dimensions.");
+        // --- Deep Protocol Adaptation Layer ---
+
+        // 1. Ensure Dimensions exist (Derive if missing)
+        if (!data.dimensions) {
+            // Use title + conflict as seed
+            const seed = (data.soul_title || "") + (data.core_tension?.conflict || "");
+            data.dimensions = deriveDimensions(seed);
+        }
+
+        // 2. Map Legacy Fields
+        if (!data.archetype_name) data.archetype_name = data.soul_title;
+        if (!data.archetype_description) data.archetype_description = data.essence_summary;
+
+        // 3. Derive Color & Keywords
+        if (!data.soul_color) {
+            data.soul_color = deriveColor(data.soul_title || "soul");
+        }
+        if (!data.keywords) {
+            data.keywords = [
+                data.archetype?.name,
+                data.archetype?.mbti,
+                data.operating_system?.decision_model?.substring(0, 6)
+            ].filter(Boolean);
+        }
 
         return data as SoulJSON;
     } catch (err) {
