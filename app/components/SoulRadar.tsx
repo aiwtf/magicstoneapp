@@ -6,7 +6,7 @@ import { Radar, User, Plus, X, Radio } from 'lucide-react';
 import { SoulJSON, SoulDimensions, generateSoulHash, calculateResonance } from '../utils/soulEngine';
 
 interface SoulRadarProps {
-    userSoul: SoulJSON;
+    userSoul: { dimensions?: SoulDimensions }; // Flexible to accept SoulJSON or SoulComposite
     onClose: () => void;
 }
 
@@ -26,7 +26,10 @@ export default function SoulRadar({ userSoul, onClose }: SoulRadarProps) {
 
     // Generate User's Hash once
     const userHash = useMemo(() => {
-        return generateSoulHash(userSoul.dimensions);
+        return generateSoulHash(userSoul.dimensions || {
+            structure: 50, luminosity: 50, resonance: 50, ethereal: 50,
+            volatility: 50, entropy: 50, cognitive_rigidness: 50, narrative_depth: 50
+        });
     }, [userSoul]);
 
     // Format Hash for display (first 16 chars)

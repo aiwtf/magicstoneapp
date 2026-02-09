@@ -7,8 +7,11 @@ export interface SoulFragment {
     timestamp: number;
 
     // Identity Tags
+    // Identity Tags
+    soul_title: string; // Alias for archetype_name (for SoulJSON compatibility)
     archetype_name: string;
     archetype_description: string;
+    essence_summary: string; // Deep Protocol
 
     // Deep Soul Protocol
     core_tension?: string | { conflict: string; description: string }; // Support both string (legacy) and object (new)
@@ -40,8 +43,10 @@ export interface SoulComposite {
     keywords: string[];
 
     // Latest Meta
+    soul_title: string; // Added
     archetype_name: string;
     archetype_description?: string;
+    essence_summary: string; // Added
 
     core_tension: string | { conflict: string; description: string };
     operating_system?: OperatingSystem;
@@ -56,6 +61,9 @@ export interface SoulComposite {
     visual_seed: string;
     soul_color: string;
     confidence_score: number;
+
+    // Compatibility for SoulJSON (SoulRadar)
+    resonance?: { visual_aesthetic: string; philosophical_root: string };
 }
 
 // 3. Density Curve Logic
@@ -123,8 +131,10 @@ export function aggregateSoul(
         dimensions: avgDimensions,
         keywords: Array.from(keywordSet).slice(0, 15),
 
+        soul_title: latest.soul_title || latest.archetype_name,
         archetype_name: latest.archetype_name,
         archetype_description: latest.archetype_description,
+        essence_summary: latest.essence_summary || latest.archetype_description,
 
         // Deep Protocol Fields (New)
         operating_system: latest.operating_system,
@@ -135,6 +145,9 @@ export function aggregateSoul(
         core_tension: latest.core_tension || "Unresolved",
         narrative_phase: latest.narrative_phase || "Wandering",
         cognitive_biases: latest.cognitive_biases || [],
+
+        resonance_meta: latest.resonance_meta,
+        resonance: latest.resonance_meta, // Alias
 
         visual_seed: latest.visual_seed,
         soul_color: latest.soul_color,

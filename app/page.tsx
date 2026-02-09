@@ -91,7 +91,7 @@ export default function Home() {
         {t('app.title')}
       </h1>
       <p className="z-10 text-[9px] text-zinc-600 mb-8 uppercase tracking-[0.3em]">
-        v0.9.5 (Visual Update)
+        v0.9.6 (English Default)
       </p>
 
       {/* Main Interaction Area */}
