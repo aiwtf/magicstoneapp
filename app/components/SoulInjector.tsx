@@ -2,8 +2,8 @@
 
 import { useAccount, useConnect, useDisconnect, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { coinbaseWallet } from 'wagmi/connectors';
-import { motion } from 'framer-motion';
-import { Zap, Wallet, Link, Loader2, CheckCircle, ExternalLink, AlertTriangle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Loader2, CheckCircle, ExternalLink, Fingerprint } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { MAGIC_STONE_ABI, CONTRACT_ADDRESS } from '../lib/abi';
 import { SoulComposite } from '../utils/soulAggregator';
@@ -52,7 +52,6 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
         }
     }, [isConfirmed, refetchBalance]);
 
-
     const handleConnect = () => {
         connect({
             connector: coinbaseWallet({
@@ -82,140 +81,216 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
     };
 
     const isMinting = isWritePending || isConfirming;
+    const isProcessing = isConnectPending || isMinting;
+    const archetypeName = soulData?.archetype_name || 'Unknown';
+    const level = soulData?.synchronization?.level || 1;
+
+    // Determine which action to fire
+    const handleAction = () => {
+        if (isProcessing) return;
+        if (!isConnected) {
+            handleConnect();
+        } else if (!hasSoul && !isConfirmed) {
+            handleMint();
+        }
+    };
+
+    // Determine action label
+    const getActionLabel = () => {
+        if (!isConnected) {
+            return isConnectPending
+                ? 'Scanning Biometrics...'
+                : 'Tap to Initialize Identity';
+        }
+        if (hasSoul) return 'Soul Verified';
+        if (isConfirmed) return 'Materialization Complete';
+        if (isWritePending) return 'Awaiting Biometric Seal...';
+        if (isConfirming) return 'Materializing...';
+        return 'Confirm Materialization';
+    };
+
+    const getActionLabelCN = () => {
+        if (!isConnected) {
+            return isConnectPending
+                ? '生物識別掃描中...'
+                : '點擊啟動靈魂識別';
+        }
+        if (hasSoul) return '靈魂已驗證';
+        if (isConfirmed) return '具現化完成';
+        if (isWritePending) return '等待靈魂確認...';
+        if (isConfirming) return '具現化中...';
+        return '確認靈魂具現化';
+    };
+
+    // Whether the fingerprint should pulse/glow
+    const isActive = isConnected && !hasSoul && !isConfirmed;
+    const isComplete = hasSoul || isConfirmed;
 
     return (
-        <div className="flex flex-col items-center gap-6 w-full text-zinc-200">
-            {/* Status Indicator */}
-            <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-[10px] uppercase tracking-widest border transition-colors ${isConnected
-                ? 'bg-emerald-900/20 border-emerald-500/30 text-emerald-400'
-                : 'bg-zinc-900/50 border-zinc-700/50 text-zinc-500'
-                }`}>
-                <div className={`w-1.5 h-1.5 rounded-full ${isConnected ? 'bg-emerald-400 animate-pulse' : 'bg-zinc-600'}`} />
-                {isConnected ? 'Link Established' : 'Neural Link Offline'}
-                <span className="mx-1 opacity-30">|</span>
-                Base Sepolia
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative flex flex-col items-center gap-2 w-full max-w-[300px] mx-auto"
+        >
+            {/* Glass Card Container */}
+            <div className="relative w-full rounded-2xl border border-white/[0.08] bg-white/[0.03] backdrop-blur-xl p-8 flex flex-col items-center gap-5 overflow-hidden">
+
+                {/* Background glow effect */}
+                <div className={`absolute inset-0 transition-opacity duration-700 ${isProcessing ? 'opacity-100' : 'opacity-0'
+                    }`}>
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent animate-pulse" />
+                </div>
+
+                {/* Scanning line animation (only during active processing) */}
+                <AnimatePresence>
+                    {isProcessing && (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className="absolute inset-0 pointer-events-none overflow-hidden"
+                        >
+                            <motion.div
+                                className="absolute left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-emerald-400/60 to-transparent shadow-[0_0_12px_rgba(52,211,153,0.4)]"
+                                animate={{ y: [0, 260, 0] }}
+                                transition={{ repeat: Infinity, duration: 2.5, ease: "easeInOut" }}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* === Central Fingerprint Area (Clickable) === */}
+                <button
+                    onClick={handleAction}
+                    disabled={isProcessing || isComplete}
+                    className="relative z-10 group flex flex-col items-center gap-4 focus:outline-none disabled:cursor-default cursor-pointer w-full"
+                >
+                    {/* Fingerprint Icon with rings */}
+                    <div className="relative">
+                        {/* Outer ring */}
+                        <motion.div
+                            className={`absolute -inset-4 rounded-full border transition-colors duration-500 ${isComplete ? 'border-emerald-500/40' :
+                                    isProcessing ? 'border-purple-500/30 animate-pulse' :
+                                        'border-zinc-700/30 group-hover:border-purple-500/20'
+                                }`}
+                            animate={isProcessing ? { scale: [1, 1.08, 1] } : {}}
+                            transition={{ repeat: Infinity, duration: 1.5 }}
+                        />
+
+                        {/* Inner glow ring */}
+                        <motion.div
+                            className={`absolute -inset-1 rounded-full transition-all duration-500 ${isComplete ? 'bg-emerald-500/10 shadow-[0_0_30px_rgba(52,211,153,0.15)]' :
+                                    isProcessing ? 'bg-purple-500/10 shadow-[0_0_30px_rgba(168,85,247,0.15)]' :
+                                        'bg-transparent group-hover:bg-purple-500/5'
+                                }`}
+                        />
+
+                        {/* The Icon */}
+                        {isComplete ? (
+                            <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                            >
+                                <CheckCircle className="relative w-16 h-16 text-emerald-400 drop-shadow-[0_0_12px_rgba(52,211,153,0.3)]" />
+                            </motion.div>
+                        ) : isProcessing ? (
+                            <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
+                            >
+                                <Fingerprint className="relative w-16 h-16 text-purple-400 drop-shadow-[0_0_12px_rgba(168,85,247,0.3)]" />
+                            </motion.div>
+                        ) : (
+                            <Fingerprint className="relative w-16 h-16 text-zinc-500 group-hover:text-purple-400 transition-colors duration-300 drop-shadow-[0_0_8px_rgba(168,85,247,0.1)] group-hover:drop-shadow-[0_0_12px_rgba(168,85,247,0.3)]" />
+                        )}
+                    </div>
+
+                    {/* Action Text */}
+                    <div className="flex flex-col items-center gap-0.5">
+                        <motion.span
+                            key={getActionLabelCN()}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`text-sm font-medium tracking-wide ${isComplete ? 'text-emerald-300' :
+                                    isProcessing ? 'text-purple-300' :
+                                        'text-zinc-300 group-hover:text-white'
+                                } transition-colors`}
+                        >
+                            {getActionLabelCN()}
+                        </motion.span>
+                        <motion.span
+                            key={getActionLabel()}
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.05 }}
+                            className={`text-[10px] uppercase tracking-widest ${isComplete ? 'text-emerald-500/60' :
+                                    isProcessing ? 'text-purple-400/60' :
+                                        'text-zinc-600 group-hover:text-zinc-400'
+                                } transition-colors`}
+                        >
+                            {getActionLabel()}
+                        </motion.span>
+                    </div>
+                </button>
+
+                {/* Error display (styled subtly) */}
+                <AnimatePresence>
+                    {writeError && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="z-10 text-[10px] text-red-400/80 text-center max-w-[240px] leading-tight"
+                        >
+                            {writeError.message.split('\n')[0].slice(0, 80)}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {/* View Transaction Link (Success only) */}
+                <AnimatePresence>
+                    {isConfirmed && txHash && (
+                        <motion.a
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            href={`https://sepolia.basescan.org/tx/${txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="z-10 flex items-center gap-1 text-[10px] text-emerald-500/60 hover:text-emerald-400 transition-colors"
+                        >
+                            View Proof <ExternalLink className="w-3 h-3" />
+                        </motion.a>
+                    )}
+                </AnimatePresence>
+
+                {/* Divider */}
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+                {/* Archetype label (Passport style) */}
+                <div className="z-10 flex items-center justify-between w-full text-[10px] text-zinc-600">
+                    <span className="uppercase tracking-widest">Type</span>
+                    <span className="font-medium text-zinc-400 tracking-wide">
+                        {archetypeName} <span className="text-zinc-600">Lvl {level}</span>
+                    </span>
+                </div>
+
+                {/* Disconnect (very subtle) */}
+                {isConnected && (
+                    <button
+                        onClick={() => disconnect()}
+                        className="z-10 text-[9px] text-zinc-700 hover:text-red-400/70 transition-colors tracking-wider uppercase"
+                    >
+                        Reset Identity
+                    </button>
+                )}
             </div>
 
-            {!isConnected ? (
-                <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex flex-col items-center gap-4 w-full"
-                >
-                    <div className="p-4 rounded-full bg-zinc-900/50 border border-zinc-800">
-                        <Wallet className="w-8 h-8 text-zinc-400" />
-                    </div>
-
-                    <div className="text-center space-y-1 mb-2">
-                        <h3 className="text-sm font-medium text-zinc-200">Connect Smart Wallet</h3>
-                        <p className="text-xs text-zinc-500 max-w-[200px] mx-auto">
-                            Initialize secure connection to the Drifting World via Base Sepolia.
-                        </p>
-                    </div>
-
-                    <button
-                        onClick={handleConnect}
-                        disabled={isConnectPending}
-                        className="group relative w-full max-w-[240px] px-6 py-3 bg-zinc-900 border border-zinc-700 hover:border-emerald-500/50 rounded-xl overflow-hidden transition-all duration-300"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-r from-emerald-900/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <div className="relative flex items-center justify-center gap-2">
-                            {isConnectPending ? (
-                                <Loader2 className="w-4 h-4 text-emerald-400 animate-spin" />
-                            ) : (
-                                <Link className="w-4 h-4 text-emerald-400" />
-                            )}
-                            <span className="text-xs font-bold text-zinc-300 group-hover:text-white uppercase tracking-wider">
-                                {isConnectPending ? 'Connecting...' : 'Initialize Link'}
-                            </span>
-                        </div>
-                    </button>
-                </motion.div>
-            ) : (
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="flex flex-col items-center gap-5 w-full"
-                >
-                    {/* Wallet Info */}
-                    <div className="flex flex-col items-center gap-1">
-                        <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Connected Identity</div>
-                        <div className="font-mono text-xs text-emerald-400 bg-emerald-900/10 px-3 py-1.5 rounded border border-emerald-500/20">
-                            {address?.slice(0, 6)}...{address?.slice(-4)}
-                        </div>
-                        <button
-                            onClick={() => disconnect()}
-                            className="text-[9px] text-zinc-600 hover:text-red-400 mt-1 transition-colors"
-                        >
-                            [Disconnect]
-                        </button>
-                    </div>
-
-                    {/* Already Minted State */}
-                    {hasSoul ? (
-                        <div className="flex flex-col items-center gap-3 p-4 bg-purple-900/10 border border-purple-500/30 rounded-xl w-full max-w-[280px]">
-                            <CheckCircle className="w-6 h-6 text-purple-400" />
-                            <div className="text-center">
-                                <h4 className="text-xs font-bold text-purple-200 uppercase tracking-wider mb-1">Soul Bound</h4>
-                                <p className="text-[10px] text-purple-300/70">
-                                    You have already minted an artifact for this soul.
-                                </p>
-                            </div>
-                        </div>
-                    ) : isConfirmed ? (
-                        /* Success State (Just finished) */
-                        <div className="flex flex-col items-center gap-3 p-4 bg-emerald-900/10 border border-emerald-500/30 rounded-xl w-full max-w-[280px] animate-in fade-in zoom-in">
-                            <CheckCircle className="w-6 h-6 text-emerald-400" />
-                            <div className="text-center">
-                                <h4 className="text-xs font-bold text-emerald-200 uppercase tracking-wider mb-1">Materialization Complete</h4>
-                                <a
-                                    href={`https://sepolia.basescan.org/tx/${txHash}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-1 text-[10px] text-emerald-400 hover:text-emerald-300 underline underline-offset-2"
-                                >
-                                    View on BaseScan <ExternalLink className="w-3 h-3" />
-                                </a>
-                            </div>
-                        </div>
-                    ) : (
-                        /* Mint Action or Pending */
-                        <div className="w-full flex flex-col items-center gap-2">
-                            {writeError && (
-                                <div className="text-[10px] text-red-400 bg-red-900/20 px-3 py-2 rounded border border-red-500/20 max-w-[260px] text-center mb-2">
-                                    {writeError.message.split('\n')[0].slice(0, 100)}...
-                                </div>
-                            )}
-
-                            <button
-                                onClick={handleMint}
-                                disabled={isMinting || !soulData}
-                                className={`group relative w-full max-w-[240px] px-6 py-4 bg-gradient-to-b from-zinc-800 to-zinc-900 border rounded-xl overflow-hidden transition-all duration-300 shadow-xl ${isMinting ? 'border-purple-500/50 cursor-wait' : 'border-zinc-700 hover:border-purple-500/50'
-                                    }`}
-                            >
-                                <div className={`absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-500/10 via-transparent to-transparent transition-opacity ${isMinting ? 'opacity-100 animate-pulse' : 'opacity-0 group-hover:opacity-100'
-                                    }`} />
-
-                                <div className="relative flex flex-col items-center gap-2">
-                                    {isMinting ? (
-                                        <Loader2 className="w-5 h-5 text-purple-400 animate-spin" />
-                                    ) : (
-                                        <Zap className="w-5 h-5 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                                    )}
-                                    <div className="flex flex-col items-center">
-                                        <span className="text-xs font-bold text-zinc-200 group-hover:text-white uppercase tracking-wider">
-                                            {isWritePending ? 'Confirm in Wallet...' : isConfirming ? 'Materializing...' : 'Mint Artifact'}
-                                        </span>
-                                        <span className="text-[9px] text-zinc-500 group-hover:text-purple-400/70">
-                                            {(soulData?.archetype_name || 'Soul') + ' • Lvl ' + (soulData?.synchronization?.level || 1)}
-                                        </span>
-                                    </div>
-                                </div>
-                            </button>
-                        </div>
-                    )}
-                </motion.div>
-            )}
-        </div>
+            {/* Disclaimer (outside card) */}
+            <div className="text-[9px] text-zinc-700 text-center leading-relaxed mt-1">
+                <p>Secured by cryptography. You own this artifact forever.</p>
+                <p>由密碼學守護。此靈魂石將永久屬於你。</p>
+            </div>
+        </motion.div>
     );
 }
