@@ -1,20 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { X, Mail, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface AuthModalProps {
     onClose: () => void;
+    onSuccess?: () => void;
 }
 
-export default function AuthModal({ onClose }: AuthModalProps) {
+export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [message, setMessage] = useState('');
     const [error, setError] = useState('');
 
+    // Listen for successful auth and trigger callback
+    useEffect(() => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+            if (event === 'SIGNED_IN') {
+                onSuccess?.();
+                onClose();
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [onClose, onSuccess]);
     const handleMagicLinkLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsLoading(true);

@@ -1,25 +1,26 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
 import SoulInput from "./components/SoulInput";
 import MagicStone from "./components/MagicStone";
-// import IncantationModal from "./components/IncantationModal"; // Legacy
-import RitualAltar from "./components/RitualAltar"; // New
+import RitualAltar from "./components/RitualAltar";
 import SoulRadar from "./components/SoulRadar";
 import SoulStatus from "./components/SoulStatus";
 import SoulReadingModal from "./components/SoulReadingModal";
-import MintingModal from "./components/MintingModal"; // New
-import SoulCompass from "./components/SoulCompass"; // New
-import SoulResultDisplay from "./components/SoulResultDisplay"; // New Visual System
-import InstallPrompt from "./components/InstallPrompt"; // Progressive Disclosure
-import { broadcastSignal, compressSoulVector } from "./utils/signalRelay"; // New
+import MintingModal from "./components/MintingModal";
+import SoulCompass from "./components/SoulCompass";
+import SoulResultDisplay from "./components/SoulResultDisplay";
+import InstallPrompt from "./components/InstallPrompt";
+import { broadcastSignal, compressSoulVector } from "./utils/signalRelay";
 import { useSoulEngine } from "./hooks/useSoulEngine";
-import { Sparkles, RefreshCw, Radio, Gem, Compass, Shield, Zap } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { supabase } from "./utils/supabaseClient";
+import { Sparkles, RefreshCw, Radio, Gem, Compass, Shield, Zap, Save, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
 import AuthModal from "./components/AuthModal";
+import SoulInjector from "./components/SoulInjector";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -38,6 +39,83 @@ export default function Home() {
   const [showMinting, setShowMinting] = useState(false);
   const [showCompass, setShowCompass] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showInjectModal, setShowInjectModal] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
+
+  // Sync level from soul data
+  const syncLevel = soulData?.synchronization?.level ?? 1;
+
+  // Show toast with auto-dismiss
+  const showToast = useCallback((message: string, type: 'success' | 'info' | 'error' = 'info') => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  const [user, setUser] = useState<any>(null);
+  const [pendingSave, setPendingSave] = useState(false);
+
+  // Auth Listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Pending Save Effect
+  useEffect(() => {
+    if (user && pendingSave) {
+      saveSoulToSupabase();
+      setPendingSave(false);
+    }
+  }, [user, pendingSave]);
+
+  // Save soul data to Supabase (Users Table)
+  const saveSoulToSupabase = useCallback(async () => {
+    if (!soulData) return;
+
+    // Fallback if not logged in (should be handled by pendingSave but good for safety)
+    if (!user) {
+      localStorage.setItem('magic_stone_composite', JSON.stringify(soulData));
+      showToast(t('toast.saved_local') || 'Progress saved locally', 'info');
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('users')
+        .upsert({
+          id: user.id,
+          email: user.email,
+          soul_data: soulData,
+          soul_level: soulData.synchronization?.level || 1,
+          updated_at: new Date().toISOString(),
+        });
+
+      if (error) throw error;
+      showToast(t('toast.soul_archived') || 'Soul archived successfully', 'success');
+    } catch (err: any) {
+      console.error('Save error:', err);
+      // Fallback
+      localStorage.setItem('magic_stone_composite', JSON.stringify(soulData));
+      showToast("Storage Error: " + err.message, 'error');
+    }
+  }, [soulData, user, showToast, t]);
+
+  // Handle Seal Click
+  const handleSealClick = () => {
+    if (!user) {
+      setPendingSave(true);
+      setShowAuthModal(true);
+    } else {
+      saveSoulToSupabase();
+    }
+  };
 
   const handleOpenCompass = async () => {
     if (!soulData) return;
@@ -140,32 +218,72 @@ export default function Home() {
               <SoulResultDisplay data={soulData!} stoneIndex={stoneIndex} />
             </div>
 
-            {/* Soul Decision Group — Only visible with valid soul data */}
-            {soulData && (soulData.synchronization?.level ?? 1) >= 1 && (
-              <div className="flex items-center justify-center gap-4 mt-12">
-                {/* Left: Seal Soul — Primary / Triggers Auth */}
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="group flex items-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-purple-900/40 to-purple-800/20 border border-purple-500/30 rounded-full hover:border-purple-400/60 hover:from-purple-800/50 hover:to-purple-700/30 transition-all duration-500 backdrop-blur-sm"
+            {/* === SOUL ACTION GATE === */}
+            <AnimatePresence mode="wait">
+              {soulData && syncLevel < 3 ? (
+                /* --- Scenario A: Level 1-2 (Incomplete Soul) --- */
+                <motion.div
+                  key="save-progress"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="flex flex-col items-center gap-4 mt-12"
                 >
-                  <Shield className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                  <span className="text-xs font-medium text-purple-200 uppercase tracking-[0.15em] group-hover:text-purple-100 transition-colors">
-                    {t('btn.seal') || 'Seal Soul'}
-                  </span>
-                </button>
+                  <p className="text-[11px] text-zinc-600 italic text-center max-w-sm leading-relaxed">
+                    {t('gate.incomplete') || 'Your soul is not yet fully crystallized. Keep talking to your AI to reach Level 3.'}
+                  </p>
+                  <button
+                    onClick={() => {
+                      localStorage.setItem('magic_stone_composite', JSON.stringify(soulData));
+                      showToast(t('toast.saved_local') || 'Progress saved locally', 'info');
+                    }}
+                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-zinc-900/40 border border-zinc-700/50 rounded-full hover:border-amber-500/40 hover:bg-amber-900/10 transition-all duration-500 backdrop-blur-sm"
+                  >
+                    <Save className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 transition-colors" />
+                    <span className="text-xs font-medium text-zinc-400 uppercase tracking-[0.15em] group-hover:text-amber-300 transition-colors">
+                      {t('btn.save') || 'Save Progress'}
+                    </span>
+                  </button>
+                </motion.div>
+              ) : soulData && syncLevel >= 3 ? (
+                /* --- Scenario B: Level 3 (Fully Crystallized) --- */
+                <motion.div
+                  key="soul-actions"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.6, delay: 0.3 }}
+                  className="flex items-center justify-center gap-4 mt-12"
+                >
+                  {/* Left: Seal Soul — Primary / Triggers Auth + Save */}
+                  <motion.button
+                    onClick={handleSealClick}
+                    animate={{ boxShadow: ['0 0 0px rgba(168,85,247,0)', '0 0 20px rgba(168,85,247,0.3)', '0 0 0px rgba(168,85,247,0)'] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-purple-900/40 to-purple-800/20 border border-purple-500/30 rounded-full hover:border-purple-400/60 hover:from-purple-800/50 hover:to-purple-700/30 transition-all duration-500 backdrop-blur-sm"
+                  >
+                    <Shield className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                    <span className="text-xs font-medium text-purple-200 uppercase tracking-[0.15em] group-hover:text-purple-100 transition-colors">
+                      {t('btn.seal') || 'Seal Soul'}
+                    </span>
+                  </motion.button>
 
-                {/* Right: Inject Soul — Secondary / Ghost */}
-                <button
-                  onClick={() => console.log('Phase 5: Chain Injection')}
-                  className="group flex items-center gap-2.5 px-7 py-3.5 bg-transparent border border-zinc-700/50 rounded-full hover:border-emerald-500/40 hover:bg-emerald-900/10 transition-all duration-500"
-                >
-                  <Zap className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-[0.15em] group-hover:text-emerald-300 transition-colors">
-                    {t('btn.inject') || 'Inject Soul'}
-                  </span>
-                </button>
-              </div>
-            )}
+                  {/* Right: Inject Soul — Secondary / Placeholder */}
+                  <motion.button
+                    onClick={() => setShowInjectModal(true)}
+                    animate={{ boxShadow: ['0 0 0px rgba(52,211,153,0)', '0 0 15px rgba(52,211,153,0.2)', '0 0 0px rgba(52,211,153,0)'] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-transparent border border-zinc-700/50 rounded-full hover:border-emerald-500/40 hover:bg-emerald-900/10 transition-all duration-500"
+                  >
+                    <Zap className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+                    <span className="text-xs font-medium text-zinc-500 uppercase tracking-[0.15em] group-hover:text-emerald-300 transition-colors">
+                      {t('btn.inject') || 'Inject Soul'}
+                    </span>
+                  </motion.button>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
 
             {/* Restart Button — Subordinate */}
             <div className="flex justify-center mt-6 mb-8">
@@ -278,7 +396,60 @@ export default function Home() {
       {/* Auth Modal — Triggered by Seal Soul button */}
       <AnimatePresence>
         {showAuthModal && (
-          <AuthModal onClose={() => setShowAuthModal(false)} />
+          <AuthModal
+            onClose={() => setShowAuthModal(false)}
+
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Inject Soul — Placeholder Modal */}
+      <AnimatePresence>
+        {showInjectModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+          >
+            <div className="absolute inset-0" onClick={() => setShowInjectModal(false)} />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm bg-zinc-900 border border-emerald-500/20 rounded-2xl p-8 shadow-2xl text-center space-y-4"
+            >
+              <button onClick={() => setShowInjectModal(false)} className="absolute top-4 right-4 text-zinc-500 hover:text-white z-10">
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="text-4xl mb-2">🌊</div>
+              <h3 className="text-lg font-serif text-white mb-6">
+                {t('inject.title') || 'Drifting World Gateway'}
+              </h3>
+
+              <SoulInjector soulData={soulData ?? undefined} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast Notification */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 50 }}
+            className={`fixed bottom-8 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full backdrop-blur-md border text-xs font-medium tracking-wider uppercase ${toast.type === 'success'
+              ? 'bg-emerald-900/60 border-emerald-500/30 text-emerald-300'
+              : toast.type === 'error'
+                ? 'bg-red-900/60 border-red-500/30 text-red-300'
+                : 'bg-zinc-800/60 border-zinc-600/30 text-zinc-300'
+              }`}
+          >
+            {toast.message}
+          </motion.div>
         )}
       </AnimatePresence>
 
