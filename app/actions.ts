@@ -73,6 +73,13 @@ export async function verifySharedLink(url: string, expectedNonce: string): Prom
                 essence_summary: "The Oracle has confirmed your identity through the ethereal link.",
                 confidence_score: 100,
 
+                synchronization: {
+                    level: 1,
+                    rate: 25,
+                    missing_data_reason: "Verified via shared link — limited data available.",
+                    is_ready_for_matching: false
+                },
+
                 core_tension: {
                     conflict: "Balance vs Chaos",
                     description: "The eternal struggle between order and entropy."
@@ -88,6 +95,7 @@ export async function verifySharedLink(url: string, expectedNonce: string): Prom
                     shadow_traits: "None observable",
                     karmic_lesson: "To trust the process."
                 },
+                matching_protocol: null,
                 resonance: {
                     visual_aesthetic: "Ethereal",
                     philosophical_root: "Stoicism"

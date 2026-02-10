@@ -1,5 +1,5 @@
 // 1. Define the input: A single fragment from an AI ritual
-import { SoulDimensions, OperatingSystem, DeepSoulAnalysis } from './soulEngine';
+import { SoulDimensions, OperatingSystem, DeepSoulAnalysis, SynchronizationMeta, MatchingProtocol } from './soulEngine';
 
 export interface SoulFragment {
     id: string;
@@ -7,17 +7,20 @@ export interface SoulFragment {
     timestamp: number;
 
     // Identity Tags
-    // Identity Tags
-    soul_title: string; // Alias for archetype_name (for SoulJSON compatibility)
+    soul_title: string;
     archetype_name: string;
     archetype_description: string;
-    essence_summary: string; // Deep Protocol
+    essence_summary: string;
 
-    // Deep Soul Protocol
-    core_tension?: string | { conflict: string; description: string }; // Support both string (legacy) and object (new)
-    operating_system?: OperatingSystem;
-    depth_analysis?: DeepSoulAnalysis;
-    resonance_meta?: { visual_aesthetic: string; philosophical_root: string }; // "resonance" conflicts with dimension name
+    // Truth Protocol: Synchronization
+    synchronization?: SynchronizationMeta;
+
+    // Deep Soul Protocol (Nullable per Truth Protocol)
+    core_tension?: string | { conflict: string; description: string } | null;
+    operating_system?: OperatingSystem | null;
+    depth_analysis?: DeepSoulAnalysis | null;
+    matching_protocol?: MatchingProtocol | null;
+    resonance_meta?: { visual_aesthetic: string; philosophical_root: string };
 
     mbti_type?: string;
     enneagram_type?: string;
@@ -43,14 +46,18 @@ export interface SoulComposite {
     keywords: string[];
 
     // Latest Meta
-    soul_title: string; // Added
+    soul_title: string;
     archetype_name: string;
     archetype_description?: string;
-    essence_summary: string; // Added
+    essence_summary: string;
 
-    core_tension: string | { conflict: string; description: string };
-    operating_system?: OperatingSystem;
-    depth_analysis?: DeepSoulAnalysis;
+    // Truth Protocol
+    synchronization?: SynchronizationMeta;
+
+    core_tension: string | { conflict: string; description: string } | null;
+    operating_system?: OperatingSystem | null;
+    depth_analysis?: DeepSoulAnalysis | null;
+    matching_protocol?: MatchingProtocol | null;
     resonance_meta?: { visual_aesthetic: string; philosophical_root: string };
 
     mbti_type?: string;
@@ -136,13 +143,15 @@ export function aggregateSoul(
         archetype_description: latest.archetype_description,
         essence_summary: latest.essence_summary || latest.archetype_description,
 
-        // Deep Protocol Fields (New)
+        // Deep Protocol Fields (Nullable per Truth Protocol)
+        synchronization: latest.synchronization,
         operating_system: latest.operating_system,
         depth_analysis: latest.depth_analysis,
+        matching_protocol: latest.matching_protocol || null,
 
         mbti_type: latest.mbti_type,
         enneagram_type: latest.enneagram_type,
-        core_tension: latest.core_tension || "Unresolved",
+        core_tension: latest.core_tension || null,
         narrative_phase: latest.narrative_phase || "Wandering",
         cognitive_biases: latest.cognitive_biases || [],
 

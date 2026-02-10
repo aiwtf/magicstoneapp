@@ -25,38 +25,60 @@ export interface OperatingSystem {
     cognitive_bias: string; // Deep Protocol
 }
 
+export interface SynchronizationMeta {
+    level: 1 | 2 | 3;
+    rate: number; // 0-100
+    missing_data_reason: string;
+    is_ready_for_matching: boolean;
+}
+
+export interface MatchingProtocol {
+    communication_style: string;
+    conflict_resolution: string;
+    ideal_complement: string;
+    deal_breaker: string;
+}
+
 export interface SoulJSON {
     verification_code?: string;
 
-    // Core Identity
-    soul_title: string;       // Replaces "archetype_name" conceptually, but we map it
+    // Truth Protocol: Synchronization Metadata
+    synchronization?: SynchronizationMeta;
+
+    // Core Identity (Level 1+ — Always Available)
+    soul_title: string;
     confidence_score: number;
-
-    // Deep Protocol Fields
-    core_tension: {
-        conflict: string;
-        description: string;
-    };
-    operating_system: OperatingSystem;
-    depth_analysis: DeepSoulAnalysis;
-    resonance: {
-        visual_aesthetic: string;
-        philosophical_root: string;
-    };
-    essence_summary: string;
-
-    // Derived/Legacy Fields for Compatibility
     archetype?: {
         name: string;
         description: string;
         mbti?: string;
         enneagram?: string;
     };
-    archetype_name?: string; // Mapped from soul_title
+
+    // Level 2+ — Nullable
+    core_tension: {
+        conflict: string;
+        description: string;
+    } | null;
+    operating_system: OperatingSystem | null;
+
+    // Level 3 Only — Nullable
+    depth_analysis: DeepSoulAnalysis | null;
+    matching_protocol: MatchingProtocol | null;
+
+    // Always Available
+    resonance?: {
+        visual_aesthetic: string;
+        philosophical_root: string;
+    };
+    essence_summary: string;
+
+    // Derived/Legacy Fields for Compatibility
+    archetype_name?: string;
     archetype_description?: string;
-    dimensions?: SoulDimensions; // Derived
-    soul_color?: string; // Derived
-    keywords?: string[]; // Derived
+    dimensions?: SoulDimensions;
+    soul_color?: string;
+    keywords?: string[];
 }
 
 /**

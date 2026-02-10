@@ -132,7 +132,6 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
             // ---------------------------
 
             // Transform raw JSON into our new Fragment structure
-            // Transform raw JSON into our new Fragment structure
             const fragment: SoulFragment = {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
                 source: selectedOracle,
@@ -143,15 +142,19 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
                 archetype_description: rawData.essence_summary || rawData.archetype?.description || "",
                 essence_summary: rawData.essence_summary || rawData.archetype?.description || "",
 
-                // Deep Protocol Mapping
+                // Truth Protocol: Synchronization Metadata
+                synchronization: rawData.synchronization || { level: 1, rate: 30, missing_data_reason: "No synchronization data from AI", is_ready_for_matching: false },
+
+                // Deep Protocol Mapping (Nullable per Truth Protocol)
                 core_tension: rawData.core_tension,
                 operating_system: rawData.operating_system,
                 depth_analysis: rawData.depth_analysis,
-                resonance_meta: rawData.resonance, // Map raw 'resonance' to 'resonance_meta' if exists, or ignore
+                matching_protocol: rawData.matching_protocol || null,
+                resonance_meta: rawData.resonance,
 
                 mbti_type: rawData.archetype?.mbti || "Unknown",
                 enneagram_type: rawData.archetype?.enneagram || "Unknown",
-                narrative_phase: "Wandering", // Default
+                narrative_phase: "Wandering",
                 cognitive_biases: rawData.operating_system?.cognitive_bias ? [rawData.operating_system.cognitive_bias] : [],
 
                 // Force non-null dimensions (handled by deriveDimensions in soulEngine)
