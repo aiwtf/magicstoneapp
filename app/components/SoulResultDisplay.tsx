@@ -68,29 +68,25 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
             >
                 <div className="inline-block relative">
                     <h1
-                        className="text-3xl md:text-5xl font-bold tracking-widest uppercase bg-clip-text text-transparent bg-gradient-to-r from-white via-white to-white/70"
-                        style={{
-                            textShadow: `0 0 30px ${data.soul_color}80, 0 0 10px ${data.soul_color}`
-                        }}
+                        className="text-sm font-light tracking-[0.5em] uppercase text-white/30 select-none"
                     >
                         {data.archetype_name}
                     </h1>
-                    <div className="absolute -inset-1 blur-xl opacity-30 bg-white/20 -z-10 rounded-full"></div>
                 </div>
             </motion.div>
 
             {/* 2. The Main Stage: Stone Container (HUD Style) */}
             <div className="relative w-full grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-12 md:gap-16">
 
-                {/* Left Tension (Flanking) */}
+                {/* Left Tension (Flanking) — pushes toward stone */}
                 <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 1.2 }}
-                    className="hidden md:flex flex-col items-end text-right space-y-2"
+                    className="hidden md:flex flex-col items-end text-right space-y-2 pr-8"
                 >
-                    <span className="text-xs text-zinc-500 uppercase tracking-widest">{t('soul.tension.a')}</span>
-                    <span className="text-xl font-light text-white/90 border-r border-white/20 pr-6">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-[0.3em]">{t('soul.tension.a')}</span>
+                    <span className="text-xl font-light text-white/90 border-r-2 border-white/10 pr-6">
                         {tensionLeft || "..."}
                     </span>
                 </motion.div>
@@ -106,7 +102,8 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
                             transition={{ delay: 1.5 }}
                             className="absolute top-10 left-0 md:left-6 z-20"
                         >
-                            <span className="text-5xl md:text-6xl font-bold text-white/5 font-sans tracking-tighter select-none pointer-events-none">
+                            <div className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1">MBTI</div>
+                            <span className="text-2xl md:text-3xl font-bold text-white/80 font-sans tracking-widest select-none pointer-events-none">
                                 {data.mbti_type}
                             </span>
                         </motion.div>
@@ -118,10 +115,10 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 1.6 }}
-                            className="absolute top-6 right-0 md:right-2 z-20 text-right"
+                            className="absolute top-10 right-0 md:right-6 z-20 text-right"
                         >
                             <div className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1">{t('soul.enneagram')}</div>
-                            <div className="text-lg md:text-xl font-light text-zinc-400 font-mono tracking-wider">
+                            <div className="text-xl md:text-2xl font-bold text-white/80 font-mono tracking-widest">
                                 {data.enneagram_type}
                             </div>
                         </motion.div>
@@ -151,15 +148,15 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
                     />
                 </div>
 
-                {/* Right Tension (Flanking) */}
+                {/* Right Tension (Flanking) — pushes away from stone */}
                 <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 1.2 }}
-                    className="hidden md:flex flex-col items-start text-left space-y-2"
+                    className="hidden md:flex flex-col items-start text-left space-y-2 pl-8"
                 >
-                    <span className="text-xs text-zinc-500 uppercase tracking-widest">{t('soul.tension.b')}</span>
-                    <span className="text-xl font-light text-white/90 border-l border-white/20 pl-6">
+                    <span className="text-[10px] text-zinc-500 uppercase tracking-[0.3em]">{t('soul.tension.b')}</span>
+                    <span className="text-xl font-light text-white/90 border-l-2 border-white/10 pl-6">
                         {tensionRight || "..."}
                     </span>
                 </motion.div>
