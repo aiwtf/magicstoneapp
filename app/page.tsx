@@ -15,10 +15,11 @@ import SoulResultDisplay from "./components/SoulResultDisplay"; // New Visual Sy
 import InstallPrompt from "./components/InstallPrompt"; // Progressive Disclosure
 import { broadcastSignal, compressSoulVector } from "./utils/signalRelay"; // New
 import { useSoulEngine } from "./hooks/useSoulEngine";
-import { Sparkles, RefreshCw, Radio, Gem, Compass } from "lucide-react";
+import { Sparkles, RefreshCw, Radio, Gem, Compass, Shield, Zap } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
+import AuthModal from "./components/AuthModal";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -31,11 +32,12 @@ export default function Home() {
   const isInitialized = !!soulData;
   const canMint = (soulData?.density || 0) >= 0.8;
 
-  const [showAltar, setShowAltar] = useState(false); // Renamed from showIncantation
+  const [showAltar, setShowAltar] = useState(false);
   const [showRadar, setShowRadar] = useState(false);
   const [showReading, setShowReading] = useState(false);
   const [showMinting, setShowMinting] = useState(false);
-  const [showCompass, setShowCompass] = useState(false); // New
+  const [showCompass, setShowCompass] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleOpenCompass = async () => {
     if (!soulData) return;
@@ -80,11 +82,11 @@ export default function Home() {
       {/* Background Ambience (on top of video) */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-transparent to-transparent pointer-events-none z-[2]" />
 
-      {/* Trust & Auth Indicator (Progressive Disclosure) */}
-      <SoulStatus visible={isInitialized} />
+      {/* Trust & Auth Indicator — HIDDEN (Progressive Disclosure: auth via Seal button only) */}
+      {false && <SoulStatus visible={isInitialized} />}
 
-      {/* PWA Install Prompt (Triggered after Soul Injection) */}
-      <InstallPrompt trigger={isInitialized} />
+      {/* PWA Install Prompt — HIDDEN (Will surface contextually in Phase 5) */}
+      {false && <InstallPrompt trigger={isInitialized} />}
 
       {/* Title */}
       <h1 className="z-10 text-4xl md:text-6xl font-bold bg-clip-text text-transparent bg-gradient-to-b from-white to-purple-400/50 mb-2 tracking-tighter opacity-80">
@@ -138,19 +140,45 @@ export default function Home() {
               <SoulResultDisplay data={soulData!} stoneIndex={stoneIndex} />
             </div>
 
-            {/* Action Buttons — Phase 4: Only Refresh visible */}
-            <div className="flex justify-center mt-12 mb-8">
-              {/* Reset / Restart Button */}
+            {/* Soul Decision Group — Only visible with valid soul data */}
+            {soulData && (soulData.synchronization?.level ?? 1) >= 1 && (
+              <div className="flex items-center justify-center gap-4 mt-12">
+                {/* Left: Seal Soul — Primary / Triggers Auth */}
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="group flex items-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-purple-900/40 to-purple-800/20 border border-purple-500/30 rounded-full hover:border-purple-400/60 hover:from-purple-800/50 hover:to-purple-700/30 transition-all duration-500 backdrop-blur-sm"
+                >
+                  <Shield className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
+                  <span className="text-xs font-medium text-purple-200 uppercase tracking-[0.15em] group-hover:text-purple-100 transition-colors">
+                    {t('btn.seal') || 'Seal Soul'}
+                  </span>
+                </button>
+
+                {/* Right: Inject Soul — Secondary / Ghost */}
+                <button
+                  onClick={() => console.log('Phase 5: Chain Injection')}
+                  className="group flex items-center gap-2.5 px-7 py-3.5 bg-transparent border border-zinc-700/50 rounded-full hover:border-emerald-500/40 hover:bg-emerald-900/10 transition-all duration-500"
+                >
+                  <Zap className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
+                  <span className="text-xs font-medium text-zinc-500 uppercase tracking-[0.15em] group-hover:text-emerald-300 transition-colors">
+                    {t('btn.inject') || 'Inject Soul'}
+                  </span>
+                </button>
+              </div>
+            )}
+
+            {/* Restart Button — Subordinate */}
+            <div className="flex justify-center mt-6 mb-8">
               <button
                 onClick={() => {
                   localStorage.removeItem('magic_stone_composite');
                   window.location.reload();
                 }}
-                className="group flex items-center gap-2 px-6 py-3 bg-zinc-900/40 border border-zinc-800/50 rounded-full hover:bg-zinc-800/60 hover:border-zinc-600 transition-all duration-300"
+                className="group flex items-center gap-2 px-5 py-2 bg-zinc-900/30 border border-zinc-800/40 rounded-full hover:bg-zinc-800/50 hover:border-zinc-700 transition-all duration-300"
                 title="Restart Ritual"
               >
-                <RefreshCw className="w-4 h-4 text-zinc-500 group-hover:text-red-400 group-hover:rotate-180 transition-all duration-500" />
-                <span className="text-[10px] text-zinc-600 uppercase tracking-widest group-hover:text-zinc-400 transition-colors">
+                <RefreshCw className="w-3.5 h-3.5 text-zinc-600 group-hover:text-red-400 group-hover:rotate-180 transition-all duration-500" />
+                <span className="text-[9px] text-zinc-700 uppercase tracking-widest group-hover:text-zinc-500 transition-colors">
                   {t('btn.reset') || 'Restart'}
                 </span>
               </button>
@@ -244,6 +272,13 @@ export default function Home() {
             onClose={() => setShowMinting(false)}
             data={soulData}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Auth Modal — Triggered by Seal Soul button */}
+      <AnimatePresence>
+        {showAuthModal && (
+          <AuthModal onClose={() => setShowAuthModal(false)} />
         )}
       </AnimatePresence>
 
