@@ -138,88 +138,57 @@ export default function Home() {
               <SoulResultDisplay data={soulData!} stoneIndex={stoneIndex} />
             </div>
 
-            {/* Action Buttons */}
-            <div className="flex gap-4 mt-8 flex-wrap justify-center">
-              {/* Reset Button */}
+            {/* Action Buttons — Phase 4: Only Refresh visible */}
+            <div className="flex justify-center mt-12 mb-8">
+              {/* Reset / Restart Button */}
               <button
                 onClick={() => {
                   localStorage.removeItem('magic_stone_composite');
                   window.location.reload();
                 }}
-                className="p-3 bg-zinc-900/50 border border-zinc-800 rounded-full hover:bg-zinc-800 hover:text-red-400 transition-all text-zinc-500"
+                className="group flex items-center gap-2 px-6 py-3 bg-zinc-900/40 border border-zinc-800/50 rounded-full hover:bg-zinc-800/60 hover:border-zinc-600 transition-all duration-300"
+                title="Restart Ritual"
               >
-                <RefreshCw className="w-4 h-4" />
-              </button>
-
-              {/* Radar Button */}
-              <button
-                onClick={() => setShowRadar(true)}
-                className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-purple-900/30 rounded-full hover:border-purple-500/50 hover:shadow-[0_0_15px_rgba(168,85,247,0.15)] transition-all group"
-              >
-                <Radio className="w-4 h-4 text-purple-400 group-hover:animate-pulse" />
-                <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-purple-300">
-                  {t('btn.radar')}
-                </span>
-              </button>
-
-              {/* Compass Button (New) */}
-              <button
-                onClick={handleOpenCompass}
-                className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-blue-900/30 rounded-full hover:border-blue-500/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.15)] transition-all group"
-              >
-                <Compass className="w-4 h-4 text-blue-400 group-hover:rotate-45 transition-transform duration-500" />
-                <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase group-hover:text-blue-300">
-                  Broadcast
-                </span>
-              </button>
-
-              {/* Inject More (Loop) */}
-              <button
-                onClick={() => setShowAltar(true)}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 hover:text-purple-400 hover:bg-purple-900/10 transition-all border border-zinc-800 hover:border-purple-800/50"
-                title="Inject Soul Fragment"
-              >
-                <Sparkles className="w-4 h-4" />
-              </button>
-
-              {/* Mint Button (New) */}
-              <button
-                onClick={() => setShowMinting(true)}
-                disabled={!canMint}
-                className={`flex items-center gap-2 px-6 py-3 rounded-full border transition-all group ${canMint
-                  ? 'bg-zinc-900 border-emerald-900/30 hover:border-emerald-500/50 hover:shadow-[0_0_15px_rgba(16,185,129,0.15)] cursor-pointer'
-                  : 'bg-zinc-950 border-zinc-900 opacity-50 cursor-not-allowed'
-                  }`}
-              >
-                <Gem className={`w-4 h-4 ${canMint ? 'text-emerald-400' : 'text-zinc-700'}`} />
-                <span className={`text-xs font-medium tracking-wider uppercase ${canMint ? 'text-zinc-300 group-hover:text-emerald-300' : 'text-zinc-700'}`}>
-                  Mint Artifact
+                <RefreshCw className="w-4 h-4 text-zinc-500 group-hover:text-red-400 group-hover:rotate-180 transition-all duration-500" />
+                <span className="text-[10px] text-zinc-600 uppercase tracking-widest group-hover:text-zinc-400 transition-colors">
+                  {t('btn.reset') || 'Restart'}
                 </span>
               </button>
             </div>
 
-            {/* Chat Input (Unlockable feature) */}
-            <div className="w-full mt-4">
-              <SoulInput onSend={absorbSoul} isLoading={isAbsorbing} />
-
-              {/* TEMP GEO TEST (Hidden in Production generally, but useful for QA) */}
-              <button
-                onClick={async () => {
-                  try {
-                    const { getCurrentLocation } = await import("./utils/geoEngine");
-                    const result = await getCurrentLocation();
-                    alert(`📍 成功獲取 Geohash: ${result.geohash}\n(精度 Level 5 ≈ 5km 盲盒範圍)\n經緯度 (隱藏): ${result.location.lat.toFixed(2)}, ${result.location.lon.toFixed(2)}`);
-                  } catch (e: any) {
-                    alert("❌ 定位錯誤 (是否已允許權限?): " + (e.message || "Unknown error"));
-                  }
-                }}
-                className="mt-4 w-full text-center text-[10px] text-zinc-800 hover:text-zinc-600 cursor-pointer transition-colors"
-              >
-                [測試] 點擊測試 Geohash 連線
-              </button>
-            </div>
+            {/* === PHASE 5 RESTORE POINT: Interactive Elements Hidden === */}
+            {false && (
+              <>
+                {/* Radar Button */}
+                <button onClick={() => setShowRadar(true)} className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-purple-900/30 rounded-full">
+                  <Radio className="w-4 h-4 text-purple-400" />
+                  <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase">{t('btn.radar')}</span>
+                </button>
+                {/* Compass / Broadcast Button */}
+                <button onClick={handleOpenCompass} className="flex items-center gap-2 px-6 py-3 bg-zinc-900 border border-blue-900/30 rounded-full">
+                  <Compass className="w-4 h-4 text-blue-400" />
+                  <span className="text-xs font-medium text-zinc-300 tracking-wider uppercase">Broadcast</span>
+                </button>
+                {/* Inject More (Sparkles) */}
+                <button onClick={() => setShowAltar(true)} className="flex items-center gap-2 px-6 py-3 rounded-full bg-zinc-900/50 text-zinc-400 border border-zinc-800">
+                  <Sparkles className="w-4 h-4" />
+                </button>
+                {/* Mint Artifact */}
+                <button onClick={() => setShowMinting(true)} disabled={!canMint} className="flex items-center gap-2 px-6 py-3 rounded-full border bg-zinc-900">
+                  <Gem className="w-4 h-4" />
+                  <span className="text-xs font-medium tracking-wider uppercase">Mint Artifact</span>
+                </button>
+                {/* Chat Input */}
+                <div className="w-full mt-4">
+                  <SoulInput onSend={absorbSoul} isLoading={isAbsorbing} />
+                </div>
+              </>
+            )}
+            {/* === END PHASE 5 RESTORE POINT === */}
           </>
         )}
+
+
 
       </div>
 
