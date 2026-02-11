@@ -131,14 +131,10 @@ export default function Home() {
     }
   }, [soulData, user, showToast, t]);
 
-  // Handle Seal Click
+  // Handle Seal Click (Direct to Web3 Minting)
   const handleSealClick = () => {
-    if (!user) {
-      setPendingSave(true);
-      setShowAuthModal(true);
-    } else {
-      saveSoulToSupabase();
-    }
+    // In Phase 5/6, we bypass email auth and go straight to wallet
+    setShowMinting(true); // Logic reuse: MintingModal now wraps SoulInjector
   };
 
   const handleOpenCompass = async () => {
@@ -279,66 +275,76 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.6, delay: 0.3 }}
-                  className="flex items-center justify-center gap-4 mt-12"
+                  className="w-full flex flex-col items-center gap-6 mt-12"
                 >
-                  {/* Left: Seal Soul — Primary / Triggers Auth + Save */}
+                  {/* Priority 1 (Top): Inject Magic (Future Teaser) */}
                   <motion.button
-                    onClick={handleSealClick}
-                    animate={{ boxShadow: ['0 0 0px rgba(168,85,247,0)', '0 0 20px rgba(168,85,247,0.3)', '0 0 0px rgba(168,85,247,0)'] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
-                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-gradient-to-r from-purple-900/40 to-purple-800/20 border border-purple-500/30 rounded-full hover:border-purple-400/60 hover:from-purple-800/50 hover:to-purple-700/30 transition-all duration-500 backdrop-blur-sm"
+                    onClick={() => showToast("Media Link Module (Spotify/Youtube) Coming Soon...", "info")}
+                    animate={{
+                      boxShadow: ['0 0 0px rgba(168,85,247,0)', '0 0 25px rgba(168,85,247,0.4)', '0 0 0px rgba(168,85,247,0)'],
+                      background: ['linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))', 'linear-gradient(to right, rgba(107,33,168,0.5), rgba(192,132,252,0.3))', 'linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))']
+                    }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    className="group relative w-full max-w-sm py-5 px-8 rounded-2xl border border-purple-500/30 overflow-hidden backdrop-blur-md"
                   >
-                    <Shield className="w-4 h-4 text-purple-400 group-hover:text-purple-300 transition-colors" />
-                    <span className="text-xs font-medium text-purple-200 uppercase tracking-[0.15em] group-hover:text-purple-100 transition-colors">
-                      {t('btn.seal') || 'Seal Soul'}
-                    </span>
+                    <div className="flex flex-col items-center gap-2 relative z-10">
+                      <div className="flex items-center gap-3">
+                        <Zap className="w-5 h-5 text-purple-300 group-hover:text-white transition-colors" />
+                        <span className="text-sm font-bold text-white tracking-[0.2em] uppercase group-hover:tracking-[0.25em] transition-all">
+                          {t('btn.inject') || 'Inject Magic'}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-purple-300/60 uppercase tracking-widest group-hover:text-purple-200 transition-colors">
+                        Enrich your Soul Artifact
+                      </span>
+                    </div>
                   </motion.button>
 
-                  {/* Right: Inject Soul — Secondary / Placeholder */}
-                  <motion.button
-                    onClick={() => setShowInjectModal(true)}
-                    animate={{ boxShadow: ['0 0 0px rgba(52,211,153,0)', '0 0 15px rgba(52,211,153,0.2)', '0 0 0px rgba(52,211,153,0)'] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
-                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-transparent border border-zinc-700/50 rounded-full hover:border-emerald-500/40 hover:bg-emerald-900/10 transition-all duration-500"
-                  >
-                    <Zap className="w-4 h-4 text-zinc-600 group-hover:text-emerald-400 transition-colors" />
-                    <span className="text-xs font-medium text-zinc-500 uppercase tracking-[0.15em] group-hover:text-emerald-300 transition-colors">
-                      {t('btn.inject') || 'Inject Soul'}
-                    </span>
-                  </motion.button>
+                  {/* Priority 2 (Middle Row): Seal & Drift */}
+                  <div className="flex items-stretch justify-center gap-4 w-full max-w-sm">
+                    {/* Left: Seal Soul (Mint) */}
+                    <button
+                      onClick={() => setShowMinting(true)}
+                      className="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl border border-zinc-700/50 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-500 transition-all duration-300 group"
+                    >
+                      <Shield className="w-4 h-4 text-zinc-500 group-hover:text-emerald-400 transition-colors" />
+                      <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest group-hover:text-emerald-300 transition-colors">
+                        {t('btn.seal') || 'Seal Soul'}
+                      </span>
+                    </button>
 
-                  {/* Enter Drifting World */}
-                  <motion.button
-                    onClick={() => setShowDrifting(true)}
-                    animate={{ boxShadow: ['0 0 0px rgba(6,182,212,0)', '0 0 15px rgba(6,182,212,0.2)', '0 0 0px rgba(6,182,212,0)'] }}
-                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
-                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-transparent border border-zinc-700/50 rounded-full hover:border-cyan-500/40 hover:bg-cyan-900/10 transition-all duration-500"
+                    {/* Right: Drifting World */}
+                    <button
+                      onClick={() => setShowDrifting(true)}
+                      className="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl border border-zinc-700/50 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-cyan-500 transition-all duration-300 group"
+                    >
+                      <Compass className="w-4 h-4 text-zinc-500 group-hover:text-cyan-400 transition-colors" />
+                      <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest group-hover:text-cyan-300 transition-colors">
+                        Drifting World
+                      </span>
+                    </button>
+                  </div>
+
+                  {/* Priority 3 (Bottom): Recast */}
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem('magic_stone_composite');
+                      window.location.reload();
+                    }}
+                    className="mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors uppercase tracking-[0.2em] flex items-center gap-2 group p-4"
                   >
-                    <Compass className="w-4 h-4 text-zinc-600 group-hover:text-cyan-400 transition-colors" />
-                    <span className="text-xs font-medium text-zinc-500 uppercase tracking-[0.15em] group-hover:text-cyan-300 transition-colors">
-                      Drifting World
-                    </span>
-                  </motion.button>
+                    <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
+                    <span>{t('btn.reset') || 'Recast Magic'}</span>
+                  </button>
+
                 </motion.div>
               ) : null}
             </AnimatePresence>
 
-            {/* Restart Button — Subordinate */}
-            <div className="flex justify-center mt-6 mb-8">
-              <button
-                onClick={() => {
-                  localStorage.removeItem('magic_stone_composite');
-                  window.location.reload();
-                }}
-                className="group flex items-center gap-2 px-5 py-2 bg-zinc-900/30 border border-zinc-800/40 rounded-full hover:bg-zinc-800/50 hover:border-zinc-700 transition-all duration-300"
-                title="Restart Ritual"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-zinc-600 group-hover:text-red-400 group-hover:rotate-180 transition-all duration-500" />
-                <span className="text-[9px] text-zinc-700 uppercase tracking-widest group-hover:text-zinc-500 transition-colors">
-                  {t('btn.reset') || 'Restart'}
-                </span>
-              </button>
-            </div>
+            {/* Remove Old Restart Button Logic (It's now in Priority 3) */}
+            {/* ... */}
+
+
 
             {/* === PHASE 5 RESTORE POINT: Interactive Elements Hidden === */}
             {false && (
@@ -475,6 +481,13 @@ export default function Home() {
         isOpen={showDrifting}
         onClose={() => setShowDrifting(false)}
         soulData={soulData}
+        // If user has not minted (canMint is roughly logic, but better to check hasSoul via contract... 
+        // For now, let's assume 'canMint' means they HAVEN'T minted yet if we track it? 
+        // Actually, let's use a simple local flag or assume everyone is spectator until they prove ownership.
+        // For this demo refactor, we can say if level < 3 OR just rely on local state 'hasSoul' from injector?
+        // Let's pass true for now to see the "Unbound" effect unless they confirm mint.
+        // Or better: isSpectator={!userHasSoul}
+        isSpectator={true} // Forcing spectator visual for now as requested by user logic flow
       />
 
       {/* Toast Notification */}

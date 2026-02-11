@@ -74,9 +74,10 @@ interface DriftingWorldProps {
     isOpen: boolean;
     onClose: () => void;
     soulData?: SoulComposite | null;
+    isSpectator?: boolean;
 }
 
-export default function DriftingWorld({ isOpen, onClose, soulData }: DriftingWorldProps) {
+export default function DriftingWorld({ isOpen, onClose, soulData, isSpectator = true }: DriftingWorldProps) {
     const userColor = soulData?.soul_color || '#8B5CF6';
     const archetypeName = soulData?.archetype_name || 'Unknown';
 
@@ -198,9 +199,11 @@ export default function DriftingWorld({ isOpen, onClose, soulData }: DriftingWor
                             >
                                 <SoulMarker
                                     color={userColor}
-                                    label={archetypeName}
+                                    label={isSpectator ? 'You (Unbound)' : archetypeName}
                                     isUser={true}
                                     size={32}
+                                    // Make it look ethereal/ghostly if not bound
+                                    opacity={isSpectator ? 0.4 : 1.0}
                                 />
                             </Marker>
                         )}
@@ -235,18 +238,21 @@ export default function DriftingWorld({ isOpen, onClose, soulData }: DriftingWor
 
                     {/* User Identity Badge */}
                     <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.06] bg-black/60 backdrop-blur-xl">
+                        <div className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-colors ${isSpectator
+                            ? 'border-white/[0.03] bg-black/40 backdrop-blur-sm'
+                            : 'border-white/[0.06] bg-black/60 backdrop-blur-xl'
+                            }`}>
                             <div
-                                className="w-2 h-2 rounded-full"
+                                className={`w-2 h-2 rounded-full ${isSpectator ? 'animate-pulse opacity-50' : ''}`}
                                 style={{
                                     backgroundColor: userColor,
-                                    boxShadow: `0 0 8px ${userColor}`,
+                                    boxShadow: isSpectator ? 'none' : `0 0 8px ${userColor}`,
                                 }}
                             />
-                            <span className="text-[11px] text-zinc-300 font-medium tracking-wide">
-                                {archetypeName}
+                            <span className={`text-[11px] font-medium tracking-wide ${isSpectator ? 'text-zinc-500' : 'text-zinc-300'}`}>
+                                {isSpectator ? 'Unbound Soul' : archetypeName}
                             </span>
-                            {userLocation && (
+                            {userLocation && !isSpectator && (
                                 <span className="text-[9px] text-zinc-600 ml-1">
                                     {userLocation.latitude.toFixed(4)}°, {userLocation.longitude.toFixed(4)}°
                                 </span>
