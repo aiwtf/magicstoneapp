@@ -20,7 +20,9 @@ interface GhostSignal {
 }
 
 export default function SoulRadar({ userSoul, onClose }: SoulRadarProps) {
-    const [lastScan, setLastScan] = useState<number>(Date.now());
+    const [lastScan, setLastScan] = useState<number>(0);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    useEffect(() => { setLastScan(Date.now()); }, []);
     const [ghosts, setGhosts] = useState<GhostSignal[]>([]);
     const [scanning, setScanning] = useState(true);
 

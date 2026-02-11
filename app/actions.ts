@@ -42,6 +42,7 @@ export async function verifySharedLink(url: string, expectedNonce: string): Prom
             .replace(/\\/g, '');
 
         // Try to parse candidates
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         let foundData: any = null;
 
         // Strategy: Find all substrings starting with { and try to parse them

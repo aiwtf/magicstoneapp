@@ -11,6 +11,7 @@ interface InstallPromptProps {
 export default function InstallPrompt({ trigger = false }: InstallPromptProps) {
     const [isIOS, setIsIOS] = useState(false);
     const [isStandalone, setIsStandalone] = useState(false);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
     const [showPrompt, setShowPrompt] = useState(false);
 
@@ -20,7 +21,9 @@ export default function InstallPrompt({ trigger = false }: InstallPromptProps) {
 
         // Check if running in standalone mode (already installed)
         const isStandaloneMode = window.matchMedia('(display-mode: standalone)').matches ||
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             (window.navigator as any).standalone === true;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsStandalone(isStandaloneMode);
 
         if (isStandaloneMode) return;

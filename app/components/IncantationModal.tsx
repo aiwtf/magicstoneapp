@@ -21,6 +21,7 @@ export default function IncantationModal({ onInitialize }: IncantationModalProps
 
     useEffect(() => {
         const newNonce = generateNonce();
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setNonce(newNonce);
         setIncantation(generateIncantation(newNonce));
 

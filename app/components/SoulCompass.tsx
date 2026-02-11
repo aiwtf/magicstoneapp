@@ -26,6 +26,9 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
     const [myLoc, setMyLoc] = useState<GeoLocation | null>(null);
     const [statusMsg, setStatusMsg] = useState("Aligning Soul Compass...");
     const [selectedBlip, setSelectedBlip] = useState<Blip | null>(null);
+    const [now, setNow] = useState(0);
+
+    useEffect(() => { setNow(Date.now()); }, []);
 
     // Compress my soul once
     const myVector = useRef(compressSoulVector(userSoul)).current;
@@ -103,6 +106,7 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
         startScan();
 
         return () => { mounted = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [userSoul]);
 
     return (
@@ -189,7 +193,7 @@ export default function SoulCompass({ userSoul, onClose }: SoulCompassProps) {
                                         Match: {Math.round(selectedBlip.similarity * 100)}%
                                     </p>
                                     <p className={`text-[10px] uppercase tracking-wider ${selectedBlip.isActive ? 'text-green-500/70' : 'text-zinc-600'}`}>
-                                        {selectedBlip.isActive ? '● Live Signal' : `Last seen ${Math.round((Date.now() - selectedBlip.timestamp) / 3600000)}h ago`}
+                                        {selectedBlip.isActive ? '● Live Signal' : `Last seen ${Math.round((now - selectedBlip.timestamp) / 3600000)}h ago`}
                                     </p>
                                 </div>
                             </div>

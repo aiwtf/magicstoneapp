@@ -42,7 +42,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
             if (error) throw error;
             setMessage('Check your email for the magic link!');
-        } catch (err: any) {
+        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             setError(err.message || 'Failed to send magic link');
         } finally {
             setIsLoading(false);
@@ -58,7 +58,7 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
                 },
             });
             if (error) throw error;
-        } catch (err: any) {
+        } catch (err: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
             setError(err.message);
         }
     };

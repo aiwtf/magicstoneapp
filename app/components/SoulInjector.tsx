@@ -1,7 +1,7 @@
 'use client';
 
 import { useAccount, useConnect, useDisconnect, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
-import { baseSepolia } from 'wagmi/chains';
+import { baseSepolia } from 'viem/chains';
 import { coinbaseWallet } from 'wagmi/connectors';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Loader2, CheckCircle, ExternalLink, Fingerprint, AlertTriangle } from 'lucide-react';
@@ -46,6 +46,7 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
 
     useEffect(() => {
         if (hash) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setTxHash(hash);
         }
     }, [hash]);

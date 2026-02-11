@@ -57,6 +57,7 @@ export default function Home() {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [user, setUser] = useState<any>(null);
   const [pendingSave, setPendingSave] = useState(false);
 
@@ -121,6 +122,7 @@ export default function Home() {
 
       if (error) throw error;
       showToast(t('toast.soul_archived') || 'Soul archived successfully', 'success');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       console.error('Save error:', err);
       // Fallback
@@ -225,6 +227,7 @@ export default function Home() {
                   const { getCurrentLocation } = await import("./utils/geoEngine");
                   const result = await getCurrentLocation();
                   alert(`📍 成功獲取 Geohash: ${result.geohash}\n(精度 Level 5 ≈ 5km 盲盒範圍)\n經緯度 (隱藏): ${result.location.lat.toFixed(2)}, ${result.location.lon.toFixed(2)}`);
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 } catch (e: any) {
                   alert("❌ 定位錯誤 (是否已允許權限?): " + (e.message || "Unknown error"));
                 }

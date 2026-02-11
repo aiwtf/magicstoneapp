@@ -133,7 +133,7 @@ export function generateNonce(length: number = 8): string {
 
 export function extractSoulJSON(text: string): SoulJSON {
     try {
-        let cleanText = text.replace(/```json/g, "").replace(/```/g, "");
+        const cleanText = text.replace(/```json/g, "").replace(/```/g, "");
         const firstOpen = cleanText.indexOf('{');
         const lastClose = cleanText.lastIndexOf('}');
 

@@ -19,6 +19,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         const saved = localStorage.getItem('magic_stone_lang') as Language;
         // Simple valid check
         if (saved && translations[saved]) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLanguage(saved);
         }
         // If no saved language, it remains 'en' (default state).

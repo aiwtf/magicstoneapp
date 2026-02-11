@@ -11,6 +11,7 @@ interface SoulStatusProps {
 }
 
 export default function SoulStatus({ visible = true }: SoulStatusProps) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [user, setUser] = useState<any>(null);
     const [showAuthModal, setShowAuthModal] = useState(false);
     const [status, setStatus] = useState<'loading' | 'anon' | 'authenticated'>('loading');

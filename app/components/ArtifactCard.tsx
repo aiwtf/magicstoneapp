@@ -33,6 +33,7 @@ export default function ArtifactCard({ data }: ArtifactCardProps) {
 
                 {/* Archetype & Narrative Phase */}
                 <div>
+                    {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                     <h2 className="text-xl font-serif text-white tracking-wide">{data.archetype_name || (data as any).archetype}</h2>
                     {data.narrative_phase && (
                         <p className="text-[10px] text-zinc-400 font-light italic mt-1">

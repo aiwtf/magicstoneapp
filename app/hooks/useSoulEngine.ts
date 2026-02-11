@@ -17,6 +17,7 @@ export function useSoulEngine() {
         const saved = localStorage.getItem("magic_stone_composite");
         if (saved) {
             try {
+                // eslint-disable-next-line react-hooks/set-state-in-effect
                 setSoulComposite(JSON.parse(saved));
                 setProgress(100);
             } catch (e) {

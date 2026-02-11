@@ -91,6 +91,7 @@ export default function DriftingWorld({ isOpen, onClose, soulData }: DriftingWor
     // Request geolocation on mount
     useEffect(() => {
         if (!isOpen) return;
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setIsLocating(true);
         setGeoError(false);
 

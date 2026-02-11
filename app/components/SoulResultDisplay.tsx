@@ -99,10 +99,10 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
             >
                 <div className="flex items-center gap-3 mb-2">
                     <div className={`px-2 py-0.5 rounded text-[10px] font-mono uppercase tracking-widest border ${syncLevel === 3
-                            ? 'bg-emerald-900/30 border-emerald-500/40 text-emerald-300'
-                            : syncLevel === 2
-                                ? 'bg-amber-900/30 border-amber-500/40 text-amber-300'
-                                : 'bg-zinc-800/50 border-zinc-700 text-zinc-500'
+                        ? 'bg-emerald-900/30 border-emerald-500/40 text-emerald-300'
+                        : syncLevel === 2
+                            ? 'bg-amber-900/30 border-amber-500/40 text-amber-300'
+                            : 'bg-zinc-800/50 border-zinc-700 text-zinc-500'
                         }`}>
                         Lv.{syncLevel}
                     </div>
@@ -247,7 +247,7 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
             >
                 <div className="p-8 bg-zinc-900/20 border-y border-white/5 backdrop-blur-sm">
                     <p className="text-lg md:text-xl leading-relaxed text-zinc-300 font-serif italic">
-                        "{data.archetype_description || "A soul waiting to be defined..."}"
+                        &quot;{data.archetype_description || "A soul waiting to be defined..."}&quot;
                     </p>
                 </div>
             </motion.div>

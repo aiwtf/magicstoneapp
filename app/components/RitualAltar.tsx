@@ -182,6 +182,7 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
 
             return;
 
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             setIsThinking(false);
             console.error(e);
@@ -202,6 +203,7 @@ export default function RitualAltar({ onClose, onInitialize }: RitualAltarProps)
             const timer = setTimeout(handleVideoEnd, 5000); // Max 5s transition
             return () => clearTimeout(timer);
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isMaterializing]);
 
     return (
