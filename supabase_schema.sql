@@ -20,3 +20,19 @@ create policy "Users can update own data" on public.users
 
 create policy "Users can insert own data" on public.users
   for insert with check (auth.uid() = id);
+
+-- =============================================
+-- Phase 5: Soul Vectorization (pgvector)
+-- =============================================
+
+-- Enable the pgvector extension to work with embedding vectors
+create extension if not exists vector;
+
+-- Add a vector column to the users table
+-- 384-dimensional vector (standard for all-MiniLM-L6-v2)
+alter table public.users add column if not exists soul_vector vector(384);
+
+-- Create an index for faster cosine similarity queries
+create index if not exists users_soul_vector_idx
+  on public.users using ivfflat (soul_vector vector_cosine_ops)
+  with (lists = 100);

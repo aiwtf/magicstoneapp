@@ -87,15 +87,31 @@ export default function Home() {
     }
 
     try {
+      // Generate soul vector (graceful degradation if it fails)
+      let soulVector: number[] | null = null;
+      try {
+        const { generateSoulVector } = await import('./utils/vectorEngine');
+        soulVector = await generateSoulVector(soulData);
+      } catch (vecErr) {
+        console.warn('Vector generation skipped:', vecErr);
+      }
+
+      const payload: Record<string, unknown> = {
+        id: user.id,
+        email: user.email,
+        soul_data: soulData,
+        soul_level: soulData.synchronization?.level || 1,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Only include soul_vector if generation succeeded
+      if (soulVector) {
+        payload.soul_vector = JSON.stringify(soulVector);
+      }
+
       const { error } = await supabase
         .from('users')
-        .upsert({
-          id: user.id,
-          email: user.email,
-          soul_data: soulData,
-          soul_level: soulData.synchronization?.level || 1,
-          updated_at: new Date().toISOString(),
-        });
+        .upsert(payload);
 
       if (error) throw error;
       showToast(t('toast.soul_archived') || 'Soul archived successfully', 'success');
