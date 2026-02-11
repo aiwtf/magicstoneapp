@@ -265,28 +265,42 @@ export default function SoulResultDisplay({ data, stoneIndex }: SoulResultDispla
                 </div>
 
                 <div className="grid grid-cols-1 gap-4">
-                    {dimList.map((dim, i) => (
-                        <div key={dim.key} className="flex items-center gap-4 group">
-                            <div className="w-32 text-xs text-zinc-400 text-right uppercase tracking-wider group-hover:text-white transition-colors">
-                                {dim.label}
+                    {dimList.map((dim, i) => {
+                        // Dynamic Color Logic
+                        let barColor = 'bg-zinc-600'; // Default (< 40%)
+                        let shadow = 'none';
+
+                        if (dim.value < 15) {
+                            barColor = 'bg-red-900/80'; // Critical
+                        } else if (dim.value >= 70) {
+                            barColor = 'bg-gradient-to-r from-purple-500 to-amber-300'; // Awakened
+                            shadow = '0 0 10px rgba(168,85,247,0.5)';
+                        } else if (dim.value >= 40) {
+                            barColor = 'bg-cyan-500'; // Active
+                        }
+
+                        return (
+                            <div key={dim.key} className="grid grid-cols-[80px_1fr_40px] items-center gap-4 group">
+                                <div className="text-[10px] md:text-xs text-zinc-400 text-right uppercase tracking-wider group-hover:text-white transition-colors truncate">
+                                    {dim.label}
+                                </div>
+                                <div className="h-1.5 bg-zinc-800/80 rounded-full overflow-hidden relative">
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${dim.value}%` }}
+                                        transition={{ duration: 1.5, delay: 2.0 + (i * 0.1), ease: "easeOut" }}
+                                        className={`h-full rounded-full ${barColor}`}
+                                        style={{
+                                            boxShadow: shadow
+                                        }}
+                                    />
+                                </div>
+                                <div className="text-[10px] font-mono text-zinc-500 text-right">
+                                    {dim.value}%
+                                </div>
                             </div>
-                            <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden relative">
-                                <motion.div
-                                    initial={{ width: 0 }}
-                                    animate={{ width: `${dim.value}%` }}
-                                    transition={{ duration: 1.5, delay: 2.0 + (i * 0.1), ease: "easeOut" }}
-                                    className="h-full bg-white relative"
-                                    style={{
-                                        backgroundColor: dim.key === 'entropy' ? '#ef4444' : (dim.key === 'narrative_depth' ? '#eab308' : 'white'),
-                                        boxShadow: `0 0 10px ${dim.key === 'entropy' ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.3)'}`
-                                    }}
-                                />
-                            </div>
-                            <div className="w-12 text-xs font-mono text-zinc-500 text-right">
-                                {dim.value}%
-                            </div>
-                        </div>
-                    ))}
+                        );
+                    })}
                 </div>
             </motion.div>
 
