@@ -21,6 +21,7 @@ import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
 import AuthModal from "./components/AuthModal";
 import SoulInjector from "./components/SoulInjector";
+import DriftingWorld from "./components/DriftingWorld";
 
 export default function Home() {
   const { t } = useLanguage();
@@ -40,6 +41,7 @@ export default function Home() {
   const [showCompass, setShowCompass] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showInjectModal, setShowInjectModal] = useState(false);
+  const [showDrifting, setShowDrifting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
 
   // Sync level from soul data
@@ -297,6 +299,19 @@ export default function Home() {
                       {t('btn.inject') || 'Inject Soul'}
                     </span>
                   </motion.button>
+
+                  {/* Enter Drifting World */}
+                  <motion.button
+                    onClick={() => setShowDrifting(true)}
+                    animate={{ boxShadow: ['0 0 0px rgba(6,182,212,0)', '0 0 15px rgba(6,182,212,0.2)', '0 0 0px rgba(6,182,212,0)'] }}
+                    transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-transparent border border-zinc-700/50 rounded-full hover:border-cyan-500/40 hover:bg-cyan-900/10 transition-all duration-500"
+                  >
+                    <Compass className="w-4 h-4 text-zinc-600 group-hover:text-cyan-400 transition-colors" />
+                    <span className="text-xs font-medium text-zinc-500 uppercase tracking-[0.15em] group-hover:text-cyan-300 transition-colors">
+                      Drifting World
+                    </span>
+                  </motion.button>
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -447,6 +462,13 @@ export default function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Drifting World — Fullscreen 3D Scene */}
+      <DriftingWorld
+        isOpen={showDrifting}
+        onClose={() => setShowDrifting(false)}
+        soulData={soulData}
+      />
 
       {/* Toast Notification */}
       <AnimatePresence>
