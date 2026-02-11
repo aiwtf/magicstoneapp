@@ -15,6 +15,7 @@ interface SoulMarkerProps {
     isUser?: boolean;
     size?: number;
     onClick?: () => void;
+    opacity?: number;
 }
 
 export default function SoulMarker({
@@ -23,6 +24,7 @@ export default function SoulMarker({
     isUser = false,
     size = 24,
     onClick,
+    opacity = 1.0,
 }: SoulMarkerProps) {
     const outerSize = isUser ? size * 3 : size * 2.5;
     const pulseSize = isUser ? size * 4 : size * 3;
@@ -30,7 +32,7 @@ export default function SoulMarker({
     return (
         <div
             className="relative flex items-center justify-center cursor-pointer group"
-            style={{ width: pulseSize, height: pulseSize }}
+            style={{ width: pulseSize, height: pulseSize, opacity }}
             onClick={onClick}
         >
             {/* Outer pulse ring */}
