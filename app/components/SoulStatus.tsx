@@ -30,7 +30,8 @@ export default function SoulStatus({ visible = true }: SoulStatusProps) {
         checkSession();
 
         // Listen for changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: any, session: any) => {
             if (session?.user) {
                 setUser(session.user);
                 setStatus('authenticated');
