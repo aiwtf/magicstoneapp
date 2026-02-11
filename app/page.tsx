@@ -423,10 +423,8 @@ export default function Home() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="text-4xl mb-2">🌊</div>
-              <h3 className="text-lg font-serif text-white mb-6">
-                {t('inject.title') || 'Drifting World Gateway'}
-              </h3>
+
+
 
               <SoulInjector soulData={soulData ?? undefined} />
             </motion.div>

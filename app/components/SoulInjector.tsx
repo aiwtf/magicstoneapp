@@ -1,9 +1,10 @@
 'use client';
 
-import { useAccount, useConnect, useDisconnect, useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useAccount, useConnect, useDisconnect, useReadContract, useWriteContract, useWaitForTransactionReceipt, useSwitchChain } from 'wagmi';
+import { baseSepolia } from 'wagmi/chains';
 import { coinbaseWallet } from 'wagmi/connectors';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, CheckCircle, ExternalLink, Fingerprint } from 'lucide-react';
+import { Loader2, CheckCircle, ExternalLink, Fingerprint, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { MAGIC_STONE_ABI, CONTRACT_ADDRESS } from '../lib/abi';
 import { SoulComposite } from '../utils/soulAggregator';
@@ -13,9 +14,12 @@ interface SoulInjectorProps {
 }
 
 export default function SoulInjector({ soulData }: SoulInjectorProps) {
-    const { address, isConnected } = useAccount();
+    const { address, isConnected, chainId } = useAccount();
     const { connect, isPending: isConnectPending } = useConnect();
     const { disconnect } = useDisconnect();
+    const { switchChain, isPending: isSwitching } = useSwitchChain();
+
+    const isWrongNetwork = isConnected && chainId !== baseSepolia.id;
 
     const [txHash, setTxHash] = useState<`0x${string}` | undefined>(undefined);
 
@@ -61,8 +65,18 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
         });
     };
 
+    const handleSwitchNetwork = () => {
+        switchChain({ chainId: baseSepolia.id });
+    };
+
     const handleMint = () => {
         if (!address || !soulData) return;
+
+        // Force network switch if needed
+        if (isWrongNetwork) {
+            handleSwitchNetwork();
+            return;
+        }
 
         try {
             writeContract({
@@ -81,7 +95,7 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
     };
 
     const isMinting = isWritePending || isConfirming;
-    const isProcessing = isConnectPending || isMinting;
+    const isProcessing = isConnectPending || isMinting || isSwitching;
     const archetypeName = soulData?.archetype_name || 'Unknown';
     const level = soulData?.synchronization?.level || 1;
 
@@ -90,6 +104,8 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
         if (isProcessing) return;
         if (!isConnected) {
             handleConnect();
+        } else if (isWrongNetwork) {
+            handleSwitchNetwork();
         } else if (!hasSoul && !isConfirmed) {
             handleMint();
         }
@@ -102,6 +118,7 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
                 ? 'Scanning Biometrics...'
                 : 'Tap to Initialize Identity';
         }
+        if (isWrongNetwork) return isSwitching ? 'Switching Plane...' : 'Switch to Ether Plane';
         if (hasSoul) return 'Soul Verified';
         if (isConfirmed) return 'Materialization Complete';
         if (isWritePending) return 'Awaiting Biometric Seal...';
@@ -115,6 +132,7 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
                 ? '生物識別掃描中...'
                 : '點擊啟動靈魂識別';
         }
+        if (isWrongNetwork) return isSwitching ? '靈界切換中...' : '切換至乙太靈界';
         if (hasSoul) return '靈魂已驗證';
         if (isConfirmed) return '具現化完成';
         if (isWritePending) return '等待靈魂確認...';
@@ -159,10 +177,25 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
                     )}
                 </AnimatePresence>
 
+                {/* Wrong Network Warning */}
+                <AnimatePresence>
+                    {isWrongNetwork && !isSwitching && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="z-10 flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-900/20 border border-amber-500/20 w-full"
+                        >
+                            <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                            <span className="text-[10px] text-amber-300/80">Wrong plane detected. Tap to switch.</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
                 {/* === Central Fingerprint Area (Clickable) === */}
                 <button
                     onClick={handleAction}
-                    disabled={isProcessing || isComplete}
+                    disabled={isProcessing || (isComplete && !isWrongNetwork)}
                     className="relative z-10 group flex flex-col items-center gap-4 focus:outline-none disabled:cursor-default cursor-pointer w-full"
                 >
                     {/* Fingerprint Icon with rings */}
@@ -170,8 +203,8 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
                         {/* Outer ring */}
                         <motion.div
                             className={`absolute -inset-4 rounded-full border transition-colors duration-500 ${isComplete ? 'border-emerald-500/40' :
-                                    isProcessing ? 'border-purple-500/30 animate-pulse' :
-                                        'border-zinc-700/30 group-hover:border-purple-500/20'
+                                isProcessing ? 'border-purple-500/30 animate-pulse' :
+                                    'border-zinc-700/30 group-hover:border-purple-500/20'
                                 }`}
                             animate={isProcessing ? { scale: [1, 1.08, 1] } : {}}
                             transition={{ repeat: Infinity, duration: 1.5 }}
@@ -180,8 +213,8 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
                         {/* Inner glow ring */}
                         <motion.div
                             className={`absolute -inset-1 rounded-full transition-all duration-500 ${isComplete ? 'bg-emerald-500/10 shadow-[0_0_30px_rgba(52,211,153,0.15)]' :
-                                    isProcessing ? 'bg-purple-500/10 shadow-[0_0_30px_rgba(168,85,247,0.15)]' :
-                                        'bg-transparent group-hover:bg-purple-500/5'
+                                isProcessing ? 'bg-purple-500/10 shadow-[0_0_30px_rgba(168,85,247,0.15)]' :
+                                    'bg-transparent group-hover:bg-purple-500/5'
                                 }`}
                         />
 
@@ -213,8 +246,8 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
                             initial={{ opacity: 0, y: 4 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`text-sm font-medium tracking-wide ${isComplete ? 'text-emerald-300' :
-                                    isProcessing ? 'text-purple-300' :
-                                        'text-zinc-300 group-hover:text-white'
+                                isProcessing ? 'text-purple-300' :
+                                    'text-zinc-300 group-hover:text-white'
                                 } transition-colors`}
                         >
                             {getActionLabelCN()}
@@ -225,8 +258,8 @@ export default function SoulInjector({ soulData }: SoulInjectorProps) {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.05 }}
                             className={`text-[10px] uppercase tracking-widest ${isComplete ? 'text-emerald-500/60' :
-                                    isProcessing ? 'text-purple-400/60' :
-                                        'text-zinc-600 group-hover:text-zinc-400'
+                                isProcessing ? 'text-purple-400/60' :
+                                    'text-zinc-600 group-hover:text-zinc-400'
                                 } transition-colors`}
                         >
                             {getActionLabel()}
