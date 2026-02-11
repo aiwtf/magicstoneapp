@@ -18,7 +18,8 @@ export default function AuthModal({ onClose, onSuccess }: AuthModalProps) {
 
     // Listen for successful auth and trigger callback
     useEffect(() => {
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event: any) => {
             if (event === 'SIGNED_IN') {
                 onSuccess?.();
                 onClose();
