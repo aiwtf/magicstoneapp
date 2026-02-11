@@ -18,14 +18,16 @@ export default function SoulStatus({ visible = true }: SoulStatusProps) {
 
     useEffect(() => {
         // Check initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session?.user) {
-                setUser(session.user);
+        const checkSession = async () => {
+            const { data } = await supabase.auth.getSession();
+            if (data.session?.user) {
+                setUser(data.session.user);
                 setStatus('authenticated');
             } else {
                 setStatus('anon');
             }
-        });
+        };
+        checkSession();
 
         // Listen for changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
