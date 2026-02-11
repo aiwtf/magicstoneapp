@@ -21,7 +21,11 @@ import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
 import AuthModal from "./components/AuthModal";
 import SoulInjector from "./components/SoulInjector";
-import DriftingWorld from "./components/DriftingWorld";
+import dynamic from "next/dynamic";
+
+const DriftingWorld = dynamic(() => import("./components/DriftingWorld"), {
+  ssr: false,
+});
 
 export default function Home() {
   const { t } = useLanguage();

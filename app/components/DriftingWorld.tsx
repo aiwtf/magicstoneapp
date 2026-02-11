@@ -1,181 +1,73 @@
 'use client';
 
 /**
- * DriftingWorld.tsx - The Phase 5 3D Drifting World
+ * DriftingWorld.tsx - Phase 5: Geo-Spatial Soul Drifting World
  *
- * A fullscreen immersive 3D scene where Soul Orbs float in a dark,
- * foggy ether. The user's orb is centered with ghost orbs nearby.
+ * A fullscreen Mapbox GL map showing the user's neighborhood in dark 3D,
+ * with glowing SoulMarker orbs floating at real GPS coordinates.
  */
 
-import { Suspense, useMemo, useCallback } from 'react';
-import { Canvas } from '@react-three/fiber';
-import {
-    PerspectiveCamera,
-    OrbitControls,
-    Stars,
-    Sparkles,
-    Environment,
-} from '@react-three/drei';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import Map, { Marker, NavigationControl, GeolocateControl } from 'react-map-gl/mapbox';
+import 'mapbox-gl/dist/mapbox-gl.css';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Compass } from 'lucide-react';
-import * as THREE from 'three';
-import SoulOrb from './SoulOrb';
+import { X, Compass, MapPin, Loader2 } from 'lucide-react';
+import SoulMarker from './SoulMarker';
 import { SoulComposite } from '../utils/soulAggregator';
 
-// Archetype-based color palette for ghost orbs
-const GHOST_COLORS = [
-    '#8B5CF6', // Violet
-    '#06B6D4', // Cyan
-    '#F59E0B', // Amber
-    '#EF4444', // Red
-    '#10B981', // Emerald
-    '#EC4899', // Pink
-    '#3B82F6', // Blue
-    '#F97316', // Orange
-];
+const MAPBOX_TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+const MAP_STYLE = 'mapbox://styles/mapbox/dark-v11';
 
-const GHOST_ARCHETYPES = [
-    'The Dreamer',
-    'The Architect',
-    'The Wanderer',
-    'The Alchemist',
-    'The Guardian',
-    'The Oracle',
-    'The Rebel',
-    'The Healer',
+// Default fallback: mesmerizing global view
+const DEFAULT_VIEW = {
+    longitude: 121.5,
+    latitude: 25.03,
+    zoom: 2,
+    pitch: 45,
+    bearing: -17.6,
+};
+
+// Archetype-based color palette for ghost orbs
+const GHOST_PALETTE = [
+    { color: '#8B5CF6', archetype: 'The Dreamer' },
+    { color: '#06B6D4', archetype: 'The Architect' },
+    { color: '#F59E0B', archetype: 'The Wanderer' },
+    { color: '#EF4444', archetype: 'The Alchemist' },
+    { color: '#10B981', archetype: 'The Guardian' },
+    { color: '#EC4899', archetype: 'The Oracle' },
+    { color: '#3B82F6', archetype: 'The Rebel' },
+    { color: '#F97316', archetype: 'The Healer' },
 ];
 
 interface GhostSoul {
     id: string;
-    position: [number, number, number];
+    longitude: number;
+    latitude: number;
     color: string;
     archetype: string;
 }
 
 /**
- * Generate mock ghost souls distributed in a spherical shell around origin.
+ * Generate ghost souls within a ~1km radius of the user.
+ * 1 degree latitude ≈ 111km, so 1km ≈ 0.009 degrees.
  */
-function generateGhostSouls(count: number): GhostSoul[] {
-    const ghosts: GhostSoul[] = [];
-    for (let i = 0; i < count; i++) {
-        // Distribute in a spherical shell (radius 4-10)
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.acos(2 * Math.random() - 1);
-        const r = 4 + Math.random() * 6;
-        const x = r * Math.sin(phi) * Math.cos(theta);
-        const y = (Math.random() - 0.5) * 4; // Slight vertical spread
-        const z = r * Math.sin(phi) * Math.sin(theta);
-
-        ghosts.push({
-            id: `ghost-${i}-${Date.now()}`,
-            position: [x, y, z],
-            color: GHOST_COLORS[i % GHOST_COLORS.length],
-            archetype: GHOST_ARCHETYPES[i % GHOST_ARCHETYPES.length],
-        });
-    }
-    return ghosts;
-}
-
-/** The 3D scene content (rendered inside Canvas) */
-function DriftingScene({
-    userColor,
-    ghostSouls,
-}: {
-    userColor: string;
-    ghostSouls: GhostSoul[];
-}) {
-    return (
-        <>
-            {/* Camera */}
-            <PerspectiveCamera makeDefault position={[0, 2, 8]} fov={60} />
-
-            {/* Controls */}
-            <OrbitControls
-                autoRotate
-                autoRotateSpeed={0.3}
-                enableZoom={true}
-                enablePan={false}
-                minDistance={3}
-                maxDistance={20}
-                maxPolarAngle={Math.PI * 0.85}
-            />
-
-            {/* Lighting */}
-            <ambientLight intensity={0.15} />
-            <pointLight position={[0, 0, 0]} intensity={0.5} color={userColor} distance={15} />
-            <pointLight position={[10, 5, -10]} intensity={0.3} color="#8B5CF6" />
-            <pointLight position={[-10, -5, 10]} intensity={0.2} color="#06B6D4" />
-
-            {/* Fog */}
-            <fog attach="fog" args={['#000000', 8, 30]} />
-
-            {/* Background Stars */}
-            <Stars
-                radius={60}
-                depth={50}
-                count={3000}
-                factor={3}
-                saturation={0.1}
-                fade
-                speed={0.5}
-            />
-
-            {/* Ambient Particles */}
-            <Sparkles
-                count={100}
-                scale={20}
-                size={1.5}
-                speed={0.2}
-                opacity={0.3}
-                color="#8B5CF6"
-            />
-
-            {/* === User's Soul Orb (Center) === */}
-            <SoulOrb
-                position={[0, 0, 0]}
-                color={userColor}
-                soulId="user-soul"
-                isUser={true}
-                scale={1.2}
-            />
-
-            {/* === Ghost Orbs === */}
-            {ghostSouls.map((ghost) => (
-                <SoulOrb
-                    key={ghost.id}
-                    position={ghost.position}
-                    color={ghost.color}
-                    soulId={ghost.id}
-                    label={ghost.archetype}
-                    scale={0.4 + Math.random() * 0.3}
-                />
-            ))}
-
-            {/* Grid plane (subtle reference) */}
-            <gridHelper
-                args={[40, 40, '#1a1a2e', '#1a1a2e']}
-                position={[0, -3, 0]}
-            />
-        </>
-    );
-}
-
-/** Loading fallback for 3D scene */
-function LoadingOverlay() {
-    return (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-10">
-            <motion.div
-                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="w-16 h-16 rounded-full border border-purple-500/30 flex items-center justify-center"
-            >
-                <Compass className="w-8 h-8 text-purple-400" />
-            </motion.div>
-            <p className="mt-4 text-xs text-zinc-500 uppercase tracking-widest">
-                Entering the Ether...
-            </p>
-        </div>
-    );
+function generateGhostSouls(
+    centerLng: number,
+    centerLat: number,
+    count: number = 8
+): GhostSoul[] {
+    const RADIUS_DEG = 0.009; // ~1km
+    return Array.from({ length: count }, (_, i) => {
+        const angle = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.8;
+        const r = RADIUS_DEG * (0.3 + Math.random() * 0.7);
+        return {
+            id: `ghost-${i}`,
+            longitude: centerLng + r * Math.cos(angle),
+            latitude: centerLat + r * Math.sin(angle),
+            color: GHOST_PALETTE[i % GHOST_PALETTE.length].color,
+            archetype: GHOST_PALETTE[i % GHOST_PALETTE.length].archetype,
+        };
+    });
 }
 
 interface DriftingWorldProps {
@@ -188,8 +80,61 @@ export default function DriftingWorld({ isOpen, onClose, soulData }: DriftingWor
     const userColor = soulData?.soul_color || '#8B5CF6';
     const archetypeName = soulData?.archetype_name || 'Unknown';
 
-    // Generate ghost souls (memoized so they don't regenerate on re-render)
-    const ghostSouls = useMemo(() => generateGhostSouls(8), []);
+    const [userLocation, setUserLocation] = useState<{
+        longitude: number;
+        latitude: number;
+    } | null>(null);
+    const [geoError, setGeoError] = useState(false);
+    const [isLocating, setIsLocating] = useState(true);
+    const [mapLoaded, setMapLoaded] = useState(false);
+
+    // Request geolocation on mount
+    useEffect(() => {
+        if (!isOpen) return;
+        setIsLocating(true);
+        setGeoError(false);
+
+        if (!navigator.geolocation) {
+            setGeoError(true);
+            setIsLocating(false);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (pos) => {
+                setUserLocation({
+                    longitude: pos.coords.longitude,
+                    latitude: pos.coords.latitude,
+                });
+                setIsLocating(false);
+            },
+            () => {
+                setGeoError(true);
+                setIsLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }, [isOpen]);
+
+    // Generate ghost souls around the user
+    const ghostSouls = useMemo(() => {
+        if (!userLocation) return [];
+        return generateGhostSouls(userLocation.longitude, userLocation.latitude);
+    }, [userLocation]);
+
+    // View state for the map
+    const initialViewState = useMemo(() => {
+        if (userLocation) {
+            return {
+                longitude: userLocation.longitude,
+                latitude: userLocation.latitude,
+                zoom: 15,
+                pitch: 60,
+                bearing: -17.6,
+            };
+        }
+        return DEFAULT_VIEW;
+    }, [userLocation]);
 
     if (!isOpen) return null;
 
@@ -201,6 +146,82 @@ export default function DriftingWorld({ isOpen, onClose, soulData }: DriftingWor
                 exit={{ opacity: 0 }}
                 className="fixed inset-0 z-50 bg-black"
             >
+                {/* Loading state */}
+                {(isLocating || !mapLoaded) && (
+                    <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black">
+                        <motion.div
+                            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                            transition={{ repeat: Infinity, duration: 2 }}
+                            className="w-16 h-16 rounded-full border border-purple-500/30 flex items-center justify-center"
+                        >
+                            {isLocating ? (
+                                <MapPin className="w-8 h-8 text-purple-400" />
+                            ) : (
+                                <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                            )}
+                        </motion.div>
+                        <p className="mt-4 text-xs text-zinc-500 uppercase tracking-widest">
+                            {isLocating ? 'Locating your coordinates...' : 'Rendering the Ether...'}
+                        </p>
+                    </div>
+                )}
+
+                {/* Mapbox Map */}
+                {!isLocating && (
+                    <Map
+                        initialViewState={initialViewState}
+                        mapboxAccessToken={MAPBOX_TOKEN}
+                        mapStyle={MAP_STYLE}
+                        style={{ width: '100%', height: '100%' }}
+                        onLoad={() => setMapLoaded(true)}
+                        maxPitch={85}
+                        fog={{
+                            color: 'rgb(10, 10, 20)',
+                            'high-color': 'rgb(20, 10, 40)',
+                            'horizon-blend': 0.1,
+                            'space-color': 'rgb(5, 5, 15)',
+                            'star-intensity': 0.6,
+                        }}
+                        terrain={{ source: 'mapbox-dem', exaggeration: 1.5 }}
+                    >
+                        {/* Navigation Controls */}
+                        <NavigationControl position="bottom-right" visualizePitch />
+                        <GeolocateControl position="bottom-right" trackUserLocation />
+
+                        {/* === User's Soul Marker === */}
+                        {userLocation && (
+                            <Marker
+                                longitude={userLocation.longitude}
+                                latitude={userLocation.latitude}
+                                anchor="center"
+                            >
+                                <SoulMarker
+                                    color={userColor}
+                                    label={archetypeName}
+                                    isUser={true}
+                                    size={32}
+                                />
+                            </Marker>
+                        )}
+
+                        {/* === Ghost Soul Markers === */}
+                        {ghostSouls.map((ghost) => (
+                            <Marker
+                                key={ghost.id}
+                                longitude={ghost.longitude}
+                                latitude={ghost.latitude}
+                                anchor="center"
+                            >
+                                <SoulMarker
+                                    color={ghost.color}
+                                    label={ghost.archetype}
+                                    size={16}
+                                />
+                            </Marker>
+                        ))}
+                    </Map>
+                )}
+
                 {/* HUD Overlay */}
                 <div className="absolute inset-0 z-20 pointer-events-none">
                     {/* Close Button */}
@@ -213,42 +234,45 @@ export default function DriftingWorld({ isOpen, onClose, soulData }: DriftingWor
 
                     {/* User Identity Badge */}
                     <div className="pointer-events-none absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1">
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl">
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.06] bg-black/60 backdrop-blur-xl">
                             <div
                                 className="w-2 h-2 rounded-full"
-                                style={{ backgroundColor: userColor, boxShadow: `0 0 8px ${userColor}` }}
+                                style={{
+                                    backgroundColor: userColor,
+                                    boxShadow: `0 0 8px ${userColor}`,
+                                }}
                             />
                             <span className="text-[11px] text-zinc-300 font-medium tracking-wide">
                                 {archetypeName}
                             </span>
+                            {userLocation && (
+                                <span className="text-[9px] text-zinc-600 ml-1">
+                                    {userLocation.latitude.toFixed(4)}°, {userLocation.longitude.toFixed(4)}°
+                                </span>
+                            )}
                         </div>
                         <span className="text-[9px] text-zinc-700 uppercase tracking-widest">
                             The Drifting World
                         </span>
                     </div>
 
-                    {/* Ghost count indicator */}
-                    <div className="pointer-events-none absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] backdrop-blur-xl">
+                    {/* Ghost count / status indicator */}
+                    <div className="pointer-events-none absolute top-6 left-6 flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/[0.06] bg-black/60 backdrop-blur-xl">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                         <span className="text-[10px] text-zinc-500 tracking-wider">
                             {ghostSouls.length} souls nearby
                         </span>
                     </div>
-                </div>
 
-                {/* 3D Canvas */}
-                <Suspense fallback={<LoadingOverlay />}>
-                    <Canvas
-                        gl={{
-                            antialias: true,
-                            toneMapping: THREE.ACESFilmicToneMapping,
-                            toneMappingExposure: 0.8,
-                        }}
-                        style={{ width: '100%', height: '100%' }}
-                    >
-                        <DriftingScene userColor={userColor} ghostSouls={ghostSouls} />
-                    </Canvas>
-                </Suspense>
+                    {/* Geo Error Banner */}
+                    {geoError && (
+                        <div className="pointer-events-none absolute top-16 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full border border-amber-500/20 bg-amber-900/30 backdrop-blur-xl">
+                            <span className="text-[10px] text-amber-300/80">
+                                Location unavailable — showing global view
+                            </span>
+                        </div>
+                    )}
+                </div>
             </motion.div>
         </AnimatePresence>
     );

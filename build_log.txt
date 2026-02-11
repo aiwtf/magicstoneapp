@@ -28,36 +28,99 @@ sers\User\package-lock
 .json as the root dire
 ctory.
  To silence this warni
-ng, set `turbopack.roo
-t` in your Next.js con
-fig, or consider remov
-ing one of the lockfil
-es if it's not needed.
+ng, set `outputFileTra
+cingRoot` in your Next
+.js config, or conside
+r removing one of the 
+lockfiles if it's not 
+needed.
    See https://nextjs.
 org/docs/app/api-refer
 ence/config/next-confi
-g-js/turbopack#root-di
-rectory for more infor
-mation.
+g-js/output#caveats fo
+r more information.
  Detected additional l
 ockfiles: 
    * C:\Users\User\Des
 ktop\magicstoneapp\pac
 kage-lock.json
 
-??Next.js 16.1.6 (Turbopack)
+??Next.js 16.1.6 (webpack)
 - Environments: .env.local
 
   Creating an optimized production build ...
-??Compiled successfully in 6.3s
+??Compiled with warnin
+gs in 16.4s
+
+./node_modules/@metama
+sk/sdk/dist/browser/es
+/metamask-sdk.js
+Module not found: Can'
+t resolve '@react-nati
+ve-async-storage/async
+-storage' in 'C:\Users
+\User\Desktop\magicsto
+neapp\node_modules\@me
+tamask\sdk\dist\browse
+r\es'
+
+Import trace for reque
+sted module:
+./node_modules/@metama
+sk/sdk/dist/browser/es
+/metamask-sdk.js
+./node_modules/@wagmi/
+connectors/dist/esm/me
+taMask.js
+./node_modules/@wagmi/
+connectors/dist/esm/ex
+ports/index.js
+./node_modules/wagmi/d
+ist/esm/exports/connec
+tors.js
+./app/components/SoulI
+njector.tsx
+./app/page.tsx
+
+./node_modules/@metama
+sk/sdk/dist/browser/es
+/metamask-sdk.js
+Module not found: Can'
+t resolve '@react-nati
+ve-async-storage/async
+-storage' in 'C:\Users
+\User\Desktop\magicsto
+neapp\node_modules\@me
+tamask\sdk\dist\browse
+r\es'
+
+Import trace for reque
+sted module:
+./node_modules/@metama
+sk/sdk/dist/browser/es
+/metamask-sdk.js
+./node_modules/@wagmi/
+connectors/dist/esm/me
+taMask.js
+./node_modules/@wagmi/
+connectors/dist/esm/ex
+ports/index.js
+./node_modules/wagmi/d
+ist/esm/exports/connec
+tors.js
+./app/components/SoulI
+njector.tsx
+./app/page.tsx
+
   Running TypeScript ...
   Collecting page data using 11 workers ...
   Generating static pages using 11 workers (0/4) ...
   Generating static pages using 11 workers (1/4) 
   Generating static pages using 11 workers (2/4) 
   Generating static pages using 11 workers (3/4) 
-??Generating static pages using 11 workers (4/4) in 434.7ms
+??Generating static pages using 11 workers (4/4) in 480.5ms
   Finalizing page optimization ...
+  Collecting build traces ...
 
 Route (app)
 ????/
