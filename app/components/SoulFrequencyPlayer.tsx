@@ -76,8 +76,8 @@ export default function SoulFrequencyPlayer({ url }: SoulFrequencyPlayerProps) {
                                     playsinline: 1,
                                     modestbranding: 1,
                                     origin: typeof window !== 'undefined' ? window.location.origin : undefined
-                                } as any
-                            }
+                                }
+                            } as any
                         }}
                     />
                 </div>
