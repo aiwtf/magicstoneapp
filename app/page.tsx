@@ -21,6 +21,8 @@ import { useLanguage } from "./contexts/LanguageContext";
 import LanguageSelector from "./components/LanguageSelector";
 import AuthModal from "./components/AuthModal";
 import SoulInjector from "./components/SoulInjector";
+import MediaInjectionModal from "./components/MediaInjectionModal";
+import SoulFrequencyPlayer from "./components/SoulFrequencyPlayer";
 import dynamic from "next/dynamic";
 
 const DriftingWorld = dynamic(() => import("./components/DriftingWorld"), {
@@ -29,7 +31,7 @@ const DriftingWorld = dynamic(() => import("./components/DriftingWorld"), {
 
 export default function Home() {
   const { t } = useLanguage();
-  const { progress, isAbsorbing, absorbSoul, injectFragment, soulData } = useSoulEngine();
+  const { progress, isAbsorbing, absorbSoul, injectFragment, soulData, injectAnthem, soulAnthem } = useSoulEngine();
 
   // Stable random selection on mount (1-12)
   const [stoneIndex] = useState(() => Math.floor(Math.random() * 12) + 1);
@@ -45,6 +47,7 @@ export default function Home() {
   const [showCompass, setShowCompass] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showInjectModal, setShowInjectModal] = useState(false);
+  const [showMediaModal, setShowMediaModal] = useState(false);
   const [showDrifting, setShowDrifting] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
 
@@ -243,6 +246,13 @@ export default function Home() {
               <SoulResultDisplay data={soulData!} stoneIndex={stoneIndex} />
             </div>
 
+            {/* === SOUL FREQUENCY PLAYER === */}
+            <AnimatePresence>
+              {soulAnthem && (
+                <SoulFrequencyPlayer url={soulAnthem} />
+              )}
+            </AnimatePresence>
+
             {/* === SOUL ACTION GATE === */}
             <AnimatePresence mode="wait">
               {soulData && syncLevel < 3 ? (
@@ -253,23 +263,41 @@ export default function Home() {
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
-                  className="flex flex-col items-center gap-4 mt-12"
+                  className="flex flex-col items-center gap-6 mt-12"
                 >
-                  <p className="text-[11px] text-zinc-600 italic text-center max-w-sm leading-relaxed">
-                    {t('gate.incomplete') || 'Your soul is not yet fully crystallized. Keep talking to your AI to reach Level 3.'}
-                  </p>
-                  <button
-                    onClick={() => {
-                      localStorage.setItem('magic_stone_composite', JSON.stringify(soulData));
-                      showToast(t('toast.saved_local') || 'Progress saved locally', 'info');
-                    }}
-                    className="group flex items-center gap-2.5 px-7 py-3.5 bg-zinc-900/40 border border-zinc-700/50 rounded-full hover:border-amber-500/40 hover:bg-amber-900/10 transition-all duration-500 backdrop-blur-sm"
-                  >
-                    <Save className="w-4 h-4 text-zinc-500 group-hover:text-amber-400 transition-colors" />
-                    <span className="text-xs font-medium text-zinc-400 uppercase tracking-[0.15em] group-hover:text-amber-300 transition-colors">
-                      {t('btn.save') || 'Save Progress'}
-                    </span>
-                  </button>
+                  <div className="flex flex-col items-center gap-2">
+                    <p className="text-xs text-zinc-500 font-light tracking-wide text-center max-w-sm leading-relaxed">
+                      {t('gate.incomplete')}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col items-center gap-3 w-full">
+                    <button
+                      onClick={() => {
+                        localStorage.setItem('magic_stone_composite', JSON.stringify(soulData));
+                        showToast(t('toast.saved_local') || 'Progress saved locally', 'info');
+                      }}
+                      className="group flex items-center justify-center gap-2.5 px-8 py-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-amber-500/30 hover:bg-amber-950/10 transition-all duration-300 w-fit mx-auto"
+                    >
+                      <Save className="w-4 h-4 text-zinc-600 group-hover:text-amber-400 transition-colors" />
+                      <span className="text-[11px] font-medium text-zinc-500 uppercase tracking-[0.15em] group-hover:text-amber-300 transition-colors">
+                        {t('btn.save')}
+                      </span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        if (confirm('此動作將銷毀當前魔石並重新開始。確定嗎？')) {
+                          localStorage.removeItem('magic_stone_composite');
+                          window.location.reload();
+                        }
+                      }}
+                      className="text-[10px] text-zinc-600 hover:text-red-400 transition-colors uppercase tracking-[0.15em] flex items-center gap-2 py-2"
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      {t('btn.recast')}
+                    </button>
+                  </div>
                 </motion.div>
               ) : soulData && syncLevel >= 3 ? (
                 /* --- Scenario B: Level 3 (Fully Crystallized) --- */
@@ -281,9 +309,9 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.3 }}
                   className="w-full flex flex-col items-center gap-6 mt-12"
                 >
-                  {/* Priority 1 (Top): Inject Magic (Future Teaser) */}
+                  {/* Priority 1 (Top): Inject Magic (Now Active) */}
                   <motion.button
-                    onClick={() => showToast("Media Link Module (Spotify/Youtube) Coming Soon...", "info")}
+                    onClick={() => setShowMediaModal(true)}
                     animate={{
                       boxShadow: ['0 0 0px rgba(168,85,247,0)', '0 0 25px rgba(168,85,247,0.4)', '0 0 0px rgba(168,85,247,0)'],
                       background: ['linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))', 'linear-gradient(to right, rgba(107,33,168,0.5), rgba(192,132,252,0.3))', 'linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))']
@@ -295,7 +323,7 @@ export default function Home() {
                       <div className="flex items-center gap-3">
                         <Zap className="w-5 h-5 text-purple-300 group-hover:text-white transition-colors" />
                         <span className="text-sm font-bold text-white tracking-[0.2em] uppercase group-hover:tracking-[0.25em] transition-all">
-                          {t('btn.inject') || 'Inject Magic'}
+                          {t('btn.inject_magic') || 'Inject Magic'}
                         </span>
                       </div>
                       <span className="text-[10px] text-purple-300/60 uppercase tracking-widest group-hover:text-purple-200 transition-colors">
@@ -304,9 +332,9 @@ export default function Home() {
                     </div>
                   </motion.button>
 
-                  {/* Priority 2 (Middle Row): Seal & Drift */}
-                  <div className="flex items-stretch justify-center gap-4 w-full max-w-sm">
-                    {/* Left: Seal Soul (Mint) */}
+                  {/* Priority 2 (Middle Row): HIDDEN temporarily per user request
+                  <div className="flex items-stretch justify-center gap-4 w-full max-w-sm opacity-50 pointer-events-none grayscale">
+                   
                     <button
                       onClick={() => setShowMinting(true)}
                       className="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl border border-zinc-700/50 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-zinc-500 transition-all duration-300 group"
@@ -317,7 +345,7 @@ export default function Home() {
                       </span>
                     </button>
 
-                    {/* Right: Drifting World */}
+                   
                     <button
                       onClick={() => setShowDrifting(true)}
                       className="flex-1 flex flex-col items-center justify-center gap-2 py-4 px-2 rounded-xl border border-zinc-700/50 bg-zinc-900/40 hover:bg-zinc-800/60 hover:border-cyan-500 transition-all duration-300 group"
@@ -328,6 +356,7 @@ export default function Home() {
                       </span>
                     </button>
                   </div>
+                  */}
 
                   {/* Priority 3 (Bottom): Recast */}
                   <button
@@ -340,7 +369,6 @@ export default function Home() {
                     <RefreshCw className="w-3 h-3 group-hover:rotate-180 transition-transform duration-500" />
                     <span>{t('btn.reset') || 'Recast Magic'}</span>
                   </button>
-
                 </motion.div>
               ) : null}
             </AnimatePresence>
@@ -451,7 +479,17 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      {/* Inject Soul — Placeholder Modal */}
+      {/* Media Injection Modal */}
+      <MediaInjectionModal
+        isOpen={showMediaModal}
+        onClose={() => setShowMediaModal(false)}
+        onInjectAnthem={(url) => {
+          injectAnthem(url);
+          showToast(t('modal.media.success') || 'Soul Anthem Resonating', 'success');
+        }}
+      />
+
+      {/* Inject Soul — Placeholder Modal (Older version, can be removed or kept) */}
       <AnimatePresence>
         {showInjectModal && (
           <motion.div

@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { SoulFragment, SoulComposite, aggregateSoul } from "../utils/soulAggregator";
 
+import { SpotifyTrack } from "../utils/spotifyEngine";
+
 // Legacy Type export if needed by other components temporarily
 export type { SoulComposite };
 
@@ -11,6 +13,8 @@ export function useSoulEngine() {
     const [logs, setLogs] = useState<string[]>([]);
     const [isAbsorbing, setIsAbsorbing] = useState(false);
     const [soulComposite, setSoulComposite] = useState<SoulComposite | null>(null);
+    const [playlist, setPlaylist] = useState<SpotifyTrack[]>([]);
+    const [soulAnthem, setSoulAnthem] = useState<string | null>(null);
 
     // Initialize from LocalStorage
     useEffect(() => {
@@ -24,6 +28,8 @@ export function useSoulEngine() {
                 console.error("Corruption in soul storage", e);
             }
         }
+        const savedAnthem = localStorage.getItem('soul_anthem');
+        if (savedAnthem) setSoulAnthem(savedAnthem);
     }, []);
 
     const injectFragment = (fragment: SoulFragment) => {
@@ -37,6 +43,15 @@ export function useSoulEngine() {
         });
         setProgress(100);
         setIsAbsorbing(false);
+    };
+
+    const injectPlaylist = (tracks: SpotifyTrack[]) => {
+        setPlaylist(tracks);
+    };
+
+    const injectAnthem = (url: string) => {
+        setSoulAnthem(url);
+        localStorage.setItem('soul_anthem', url);
     };
 
     const absorbSoul = async (input: string) => {
@@ -53,6 +68,10 @@ export function useSoulEngine() {
         isAbsorbing,
         absorbSoul,
         injectFragment,
+        injectPlaylist,
+        playlist,
         soulData: soulComposite,
+        injectAnthem,
+        soulAnthem,
     };
 }
