@@ -309,28 +309,79 @@ export default function Home() {
                   transition={{ duration: 0.6, delay: 0.3 }}
                   className="w-full flex flex-col items-center gap-6 mt-12"
                 >
-                  {/* Priority 1 (Top): Inject Magic (Now Active) */}
-                  <motion.button
-                    onClick={() => setShowMediaModal(true)}
-                    animate={{
-                      boxShadow: ['0 0 0px rgba(168,85,247,0)', '0 0 25px rgba(168,85,247,0.4)', '0 0 0px rgba(168,85,247,0)'],
-                      background: ['linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))', 'linear-gradient(to right, rgba(107,33,168,0.5), rgba(192,132,252,0.3))', 'linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))']
-                    }}
-                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                    className="group relative w-full max-w-sm py-5 px-8 rounded-2xl border border-purple-500/30 overflow-hidden backdrop-blur-md"
-                  >
-                    <div className="flex flex-col items-center gap-2 relative z-10">
-                      <div className="flex items-center gap-3">
-                        <Zap className="w-5 h-5 text-purple-300 group-hover:text-white transition-colors" />
-                        <span className="text-sm font-bold text-white tracking-[0.2em] uppercase group-hover:tracking-[0.25em] transition-all">
-                          {t('btn.inject_magic') || 'Inject Magic'}
+                  {/* 
+                      Gamification Logic: 
+                      - Level 1: Inject Magic (Center Button)
+                      - Level 2: Magic Injected (Soul Anthem) -> Unlock "Drifting World" (Mapbox)
+                  */}
+                  {!soulAnthem ? (
+                    /* --- State 1: No Music (Locked) --- */
+                    <motion.button
+                      key="inject-btn"
+                      onClick={() => setShowMediaModal(true)}
+                      animate={{
+                        boxShadow: ['0 0 0px rgba(168,85,247,0)', '0 0 25px rgba(168,85,247,0.4)', '0 0 0px rgba(168,85,247,0)'],
+                        background: ['linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))', 'linear-gradient(to right, rgba(107,33,168,0.5), rgba(192,132,252,0.3))', 'linear-gradient(to right, rgba(88,28,135,0.4), rgba(168,85,247,0.2))']
+                      }}
+                      transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                      className="group relative w-full max-w-sm py-5 px-8 rounded-2xl border border-purple-500/30 overflow-hidden backdrop-blur-md"
+                    >
+                      <div className="flex flex-col items-center gap-2 relative z-10">
+                        <div className="flex items-center gap-3">
+                          <Zap className="w-5 h-5 text-purple-300 group-hover:text-white transition-colors" />
+                          <span className="text-sm font-bold text-white tracking-[0.2em] uppercase group-hover:tracking-[0.25em] transition-all">
+                            {t('btn.inject_magic') || 'Inject Magic'}
+                          </span>
+                        </div>
+                        <span className="text-[10px] text-purple-300/60 uppercase tracking-widest group-hover:text-purple-200 transition-colors">
+                          Enrich your Soul Artifact
                         </span>
                       </div>
-                      <span className="text-[10px] text-purple-300/60 uppercase tracking-widest group-hover:text-purple-200 transition-colors">
-                        Enrich your Soul Artifact
-                      </span>
+                    </motion.button>
+                  ) : (
+                    /* --- State 2: Music Injected (Unlocked) --- */
+                    <div className="flex items-center gap-4 w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
+                      {/* Left: Change Melody */}
+                      <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => setShowMediaModal(true)}
+                        className="flex-1 py-4 px-4 bg-zinc-900/40 border border-purple-500/20 hover:border-purple-500/50 rounded-xl transition-all group"
+                      >
+                        <div className="flex flex-col items-center gap-1">
+                          <span className="text-[10px] text-purple-400 font-bold tracking-widest uppercase group-hover:text-purple-300">
+                            Change Melody
+                          </span>
+                          <span className="text-[9px] text-zinc-600 group-hover:text-zinc-500">
+                            Soul Frequency Active
+                          </span>
+                        </div>
+                      </motion.button>
+
+                      {/* Right: Drifting World (Unlocked) */}
+                      <motion.button
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={() => setShowDrifting(true)}
+                        className="flex-1 py-4 px-4 bg-cyan-950/30 border border-cyan-500/30 hover:bg-cyan-900/40 hover:border-cyan-400 rounded-xl transition-all group relative overflow-hidden"
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <div className="flex flex-col items-center gap-1 relative z-10">
+                          <div className="flex items-center gap-2">
+                            <Compass className="w-4 h-4 text-cyan-400 group-hover:animate-spin-slow" />
+                            <span className="text-xs font-bold text-cyan-100 tracking-widest uppercase shadow-black drop-shadow-md">
+                              Drifting World
+                            </span>
+                          </div>
+                          <span className="text-[9px] text-cyan-500/70 uppercase tracking-wider group-hover:text-cyan-400">
+                            Mapbox Portal Open
+                          </span>
+                        </div>
+                      </motion.button>
                     </div>
-                  </motion.button>
+                  )}
 
                   {/* Priority 2 (Middle Row): HIDDEN temporarily per user request
                   <div className="flex items-stretch justify-center gap-4 w-full max-w-sm opacity-50 pointer-events-none grayscale">
@@ -361,8 +412,12 @@ export default function Home() {
                   {/* Priority 3 (Bottom): Recast */}
                   <button
                     onClick={() => {
-                      localStorage.removeItem('magic_stone_composite');
-                      window.location.reload();
+                      if (confirm(t('modal.recast.confirm') || 'Recast Magic? This will clear all progress.')) {
+                        localStorage.removeItem('magic_stone_composite');
+                        localStorage.removeItem('soul_progress');
+                        localStorage.removeItem('soul_anthem');
+                        window.location.reload();
+                      }
                     }}
                     className="mt-4 text-xs text-zinc-600 hover:text-zinc-400 transition-colors uppercase tracking-[0.2em] flex items-center gap-2 group p-4"
                   >

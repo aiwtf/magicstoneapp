@@ -45,22 +45,38 @@ export default function SoulFrequencyPlayer({ url }: SoulFrequencyPlayerProps) {
                     ))}
                 </div>
 
-                {/* Hidden Player (Must not be display: none for autoplay to work reliably) */}
-                <div className="absolute opacity-0 pointer-events-none">
+                {/* 
+                    Hidden Player Wrapper 
+                    NOTE: Modern browsers (Chrome) may block media playback if the element is 
+                    too small (1x1) or fully hidden (display:none/opacity:0).
+                    We keep it technically 'visible' but transparent and behind content.
+                */}
+                <div className="absolute top-0 left-0 z-[-1] opacity-[0.01] pointer-events-none overflow-hidden">
                     <ReactPlayer
                         url={url}
                         playing={isPlaying}
                         volume={volume}
-                        width="1px"
-                        height="1px"
-                        onReady={() => setIsReady(true)}
+                        muted={false} // Explicitly ensure sound is on
+                        width="100px" // Larger size to satisfy browser heuristics
+                        height="100px"
+                        onReady={() => {
+                            setIsReady(true);
+                            // Attempt to force play on ready (sometimes helps with race conditions)
+                            setIsPlaying(true);
+                        }}
                         onEnded={() => setIsPlaying(false)}
                         onPause={() => setIsPlaying(false)}
                         onPlay={() => setIsPlaying(true)}
                         onError={(e) => console.error("Player Error:", e)}
                         config={{
                             youtube: {
-                                playerVars: { showinfo: 0, controls: 0, playsinline: 1 } as any
+                                playerVars: {
+                                    showinfo: 0,
+                                    controls: 0,
+                                    playsinline: 1,
+                                    modestbranding: 1,
+                                    origin: typeof window !== 'undefined' ? window.location.origin : undefined
+                                } as any
                             }
                         }}
                     />
